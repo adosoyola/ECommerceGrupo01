@@ -1,0 +1,34 @@
+@model ECommerce.Models.PaymentViewModel
+
+@{
+    ViewData["Title"] = "Pago";
+}
+
+<h2>💳 Pago con tarjeta</h2>
+
+<form asp-action="Payment" method="post">
+    <div class="form-group">
+        <label asp-for="CardNumber"></label>
+        <input asp-for="CardNumber" class="form-control" />
+        <span asp-validation-for="CardNumber" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Expiration"></label>
+        <input asp-for="Expiration" class="form-control" placeholder="MM/AA" />
+        <span asp-validation-for="Expiration" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CVV"></label>
+        <input asp-for="CVV" class="form-control" />
+        <span asp-validation-for="CVV" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Amount"></label>
+        <input asp-for="Amount" class="form-control" readonly />
+    </div>
+
+    <button type="submit" class="btn btn-success">Confirmar Pago</button>
+</form>

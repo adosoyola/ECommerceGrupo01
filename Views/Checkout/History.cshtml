@@ -1,0 +1,43 @@
+@model List<ECommerce.Models.Order>
+
+@{
+    ViewData["Title"] = "Historial de Compras";
+}
+
+<h2>📜 Historial de Compras</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p>No tienes compras registradas.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th># Pedido</th>
+                <th>Fecha</th>
+                <th>Productos</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var order in Model.OrderByDescending(o => o.CreatedAt))
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    <ul>
+                        @foreach (var item in order.Items)
+                        {
+                            <li>@item.Product.Name (x@item.Quantity) - @item.UnitPrice.ToString("C")</li>
+                        }
+                    </ul>
+                </td>
+                <td><strong>@order.Total.ToString("C")</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

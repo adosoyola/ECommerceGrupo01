@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Panel de Administración";
+}
+
+<h2>Panel de Administración</h2>
+
+<div style="display:flex; gap:20px;">
+    <div>
+        <h3>Productos</h3>
+        <p>Total: @ViewBag.ProductCount</p>
+        <a href="/Admin/Products">Ver productos</a>
+    </div>
+
+    <div>
+        <h3>Órdenes</h3>
+        <p>Total: @ViewBag.OrderCount</p>
+        <a href="/Admin/Orders">Ver órdenes</a>
+    </div>
+
+    <div>
+        <h3>Usuarios</h3>
+        <p>Total: @ViewBag.UserCount</p>
+        <a href="/Admin/Users">Ver usuarios</a>
+    </div>
+</div>

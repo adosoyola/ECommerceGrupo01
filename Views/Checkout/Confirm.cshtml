@@ -1,0 +1,35 @@
+@model List<ECommerce.Models.CartItem>
+
+
+<h2>Confirmar Compra</h2>
+
+
+
+
+<form asp-action="Confirm" method="post">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.UnitPrice.ToString("C")</td>
+                <td>@item.Quantity</td>
+                <td>@(item.UnitPrice * item.Quantity).ToString("C")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    
+
+    <button type="submit" class="btn btn-success">✅ Confirmar Compra</button>
+</form>

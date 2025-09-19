@@ -1,0 +1,64 @@
+@model List<ECommerce.Models.CartItem>
+
+@{
+    ViewData["Title"] = "Mi Carrito";
+}
+
+<h2>🛒 Mi Carrito</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p>Tu carrito está vacío.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.UnitPrice.ToString("C")</td>
+                <td>
+                    <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
+                        <input type="hidden" name="productId" value="@item.ProductId" />
+                        <input type="number" name="qty" value="@item.Quantity" min="1" style="width:70px;" />
+                        <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
+                    </form>
+                </td>
+                <td>@(item.UnitPrice * item.Quantity).ToString("C")</td>
+                <td>
+                    <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
+                        <input type="hidden" name="productId" value="@item.ProductId" />
+                        <input type="hidden" name="qty" value="0" />
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+<form asp-controller="Checkout" asp-action="PreConfirm" method="get">
+    <button type="submit" class="btn btn-success">Confirmar compra</button>
+</form>
+
+
+    <h4>
+
+        Total: 
+        @Model.Sum(x => x.UnitPrice * x.Quantity).ToString("C")
+    </h4>
+    
+<a asp-controller="Checkout" asp-action="History" class="btn btn-primary">
+        📜 Ver Historial de Compras
+    </a>
+}
