@@ -4,61 +4,147 @@
     ViewData["Title"] = "Mi Carrito";
 }
 
-<h2>🛒 Mi Carrito</h2>
+<!-- NAVBAR SOLO EN CARRITO -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
 
-@if (Model == null || !Model.Any())
-{
-    <p>Tu carrito está vacío.</p>
-}
-else
-{
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Total</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.UnitPrice.ToString("C")</td>
-                <td>
-                    <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
-                        <input type="hidden" name="productId" value="@item.ProductId" />
-                        <input type="number" name="qty" value="@item.Quantity" min="1" style="width:70px;" />
-                        <button type="submit" class="btn btn-sm btn-primary">Actualizar</button>
-                    </form>
-                </td>
-                <td>@(item.UnitPrice * item.Quantity).ToString("C")</td>
-                <td>
-                    <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
-                        <input type="hidden" name="productId" value="@item.ProductId" />
-                        <input type="hidden" name="qty" value="0" />
-                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-<form asp-controller="Checkout" asp-action="PreConfirm" method="get">
-    <button type="submit" class="btn btn-success">Confirmar compra</button>
-</form>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Products" asp-action="Index">
+                        <i class="bi bi-shop"></i> Productos
+                    </a>
+                </li>
 
-    <h4>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Checkout" asp-action="History">
+                        <i class="bi bi-receipt"></i> Mis pedidos
+                    </a>
+                </li>
 
-        Total: 
-        @Model.Sum(x => x.UnitPrice * x.Quantity).ToString("C")
-    </h4>
-    
-<a asp-controller="Checkout" asp-action="History" class="btn btn-primary">
-        📜 Ver Historial de Compras
-    </a>
-}
+                <li class="nav-item">
+                    <a class="nav-link active" asp-controller="Cart" asp-action="Index">
+                        <i class="bi bi-cart3"></i> Carrito
+                    </a>
+                </li>
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <!-- Si ya inició sesión -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                    </li>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                                <i class="bi bi-gear"></i> Panel Admin
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <!-- Si NO ha iniciado sesión -->
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- CARRITO -->
+<div class="container">
+    <h2 class="mb-4 text-center">🛒 Mi Carrito</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-cart-x"></i> Tu carrito está vacío.
+            <br />
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-sm mt-2">
+                Ir a comprar 🛍️
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@item.Name</td>
+                        <td>@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE"))</td>
+                        <td>
+                            <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <input type="number" name="qty" value="@item.Quantity" min="1" 
+                                       class="form-control form-control-sm d-inline-block" style="width:70px;" />
+                                <button type="submit" class="btn btn-sm btn-primary ms-1">Actualizar</button>
+                            </form>
+                        </td>
+                        <td class="fw-bold text-success">
+                            @((item.UnitPrice * item.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE")))
+                        </td>
+                        <td>
+                            <form asp-controller="Cart" asp-action="Update" method="post" class="d-inline">
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <input type="hidden" name="qty" value="0" />
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <h4>
+                Total: 
+                <span class="text-success fw-bold">
+                    @Model.Sum(x => x.UnitPrice * x.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE"))
+                </span>
+            </h4>
+            
+            <div class="d-flex justify-content-end">
+            <form asp-controller="Products" asp-action="Index" method="get">
+                <button type="submit" class="btn btn-warning btn-lg">Seguir comprando</button>
+            </form>
+            </div class="d-flex justify-content-end">
+            <div>
+            <form asp-controller="Checkout" asp-action="PreConfirm" method="get">
+                <button type="submit" class="btn btn-success btn-lg">✅ Confirmar compra</button>
+            </form>
+        </div>
+        </div>
+    }
+</div>

@@ -25,8 +25,26 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
-            await _signInManager.SignOutAsync();
+            
+
+            // Log: qué había antes
+    var before = HttpContext.Session.GetString("CartSession"); // <-- usa tu key real aquí
+    _logger.LogInformation("Cart before logout: {Cart}", before ?? "<null>");
+
+    await _signInManager.SignOutAsync();
+
+    // Elimina la clave exacta que usas para guardar el carrito
+    HttpContext.Session.Remove("CartSession"); // <-- o la key real
+    // o para borrar todo:
+    HttpContext.Session.Clear();
+
+    var after = HttpContext.Session.GetString("CartSession");
+    _logger.LogInformation("Cart after logout: {Cart}", after ?? "<null>");
+
+    
             _logger.LogInformation("User logged out.");
+           
+
             if (returnUrl != null)
             {
                 return LocalRedirect(returnUrl);

@@ -1,35 +1,79 @@
 @model List<ECommerce.Models.CartItem>
 
+@{
+    ViewData["Title"] = "Confirmar Compra";
+}
 
-<h2>Confirmar Compra</h2>
+<!-- NAVBAR -->
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🏠 Home</a>
 
+            <span class="navbar-text fw-bold text-white position-absolute start-50 translate-middle-x">
+                SYSTEMCUSCO
+            </span>
 
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/Cart">🛒 Carrito</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Checkout/History">📜 Pedidos</a></li>
 
+                    @if (User.Identity?.IsAuthenticated ?? false)
+                    {
+                        <li class="nav-item">
+                            <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
+                                <button type="submit" class="nav-link btn btn-link text-danger p-0">🚪 Cerrar sesión</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-area="Identity" asp-page="/Account/Login">🔑 Iniciar sesión</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
 
-<form asp-action="Confirm" method="post">
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.UnitPrice.ToString("C")</td>
-                <td>@item.Quantity</td>
-                <td>@(item.UnitPrice * item.Quantity).ToString("C")</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+<div class="container mt-4">
+    <h2>✅ Confirmar Compra</h2>
 
-    
+    <form asp-action="Confirm" method="post">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE"))</td>
+                    <td>@item.Quantity</td>
+                    <td>@((item.UnitPrice * item.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE")))</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+                <tr class="table-secondary fw-bold">
+                    <td colspan="3" class="text-end">Total General:</td>
+                    <td>
+                        @Model.Sum(x => x.UnitPrice * x.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE"))
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
 
-    <button type="submit" class="btn btn-success">✅ Confirmar Compra</button>
-</form>
+        <div class="d-flex justify-content-between mt-3">
+            <a asp-controller="Cart" asp-action="Index" class="btn btn-secondary">⬅ Volver al Carrito</a>
+            <button type="submit" class="btn btn-success">✅ Confirmar Compra</button>
+        </div>
+    </form>
+</div>

@@ -12,6 +12,7 @@ public class CheckoutController : Controller
     private readonly ApplicationDbContext _db;
     private readonly UserManager<IdentityUser> _userManager;
     private const string SessionKey = "CartSession";
+    private const string PaymentSessionKey = "HasPaymentData";
 
     public CheckoutController(ApplicationDbContext db, UserManager<IdentityUser> userManager)
     {
@@ -28,6 +29,14 @@ public IActionResult PreConfirm()
     {
         // redirige al login de Identity
         return Redirect("/Identity/Account/Login?returnUrl=/Checkout/Payment");
+    }
+
+    // ✅ Verificar si ya tiene datos de pago en la sesión
+    var hasPayment = HttpContext.Session.GetString(PaymentSessionKey) == "true";
+    if (hasPayment)
+    {
+        // Si ya tiene tarjeta, lo mandamos directo a Confirm
+        return RedirectToAction("Confirm");
     }
 
     return RedirectToAction("Payment");
@@ -86,8 +95,10 @@ public async Task<IActionResult> Payment(PaymentViewModel model)
     // Simulación de validación
     if (model.CardNumber.StartsWith("4"))
     {
+        // ✅ Marcar que ya tiene tarjeta en esta sesión
+        HttpContext.Session.SetString(PaymentSessionKey, "true");
         // Tarjetas que empiezan con 4 → pago aprobado
-       return RedirectToAction("Confirm");
+            return RedirectToAction("Confirm");
 
     }
     else

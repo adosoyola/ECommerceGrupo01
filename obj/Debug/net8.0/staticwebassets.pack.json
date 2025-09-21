@@ -13,6 +13,18 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\banner1.webp",
+      "PackagePath": "staticwebassets\\images\\banner1.webp"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\banner2.webp",
+      "PackagePath": "staticwebassets\\images\\banner2.webp"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\banner3.jpg",
+      "PackagePath": "staticwebassets\\images\\banner3.jpg"
+    },
+    {
       "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\impresora.jpg",
       "PackagePath": "staticwebassets\\images\\impresora.jpg"
     },

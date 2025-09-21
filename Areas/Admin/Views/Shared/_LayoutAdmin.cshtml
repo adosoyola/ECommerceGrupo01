@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
+        <div class="container-fluid">
+
+            <!-- HOME a la izquierda -->
+            <a class="navbar-brand" href="/">🏠 Home</a>
+
+            <!-- Texto centrado -->
+            <span class="navbar-text fw-bold text-white position-absolute start-50 translate-middle-x">
+                SYSTEMCUSCO
+            </span>
+
+            <!-- Opciones a la derecha -->
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                        <a class="nav-link text-danger" href="javascript:document.getElementById('logoutForm').submit();">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+
+
+    <main class="container mt-4">
+        @RenderBody()
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

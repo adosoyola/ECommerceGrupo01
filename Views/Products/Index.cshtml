@@ -5,56 +5,141 @@
     ViewData["Title"] = "Productos";
 }
 
-<h1 class="mb-4">Catálogo de productos</h1>
+<!-- NAVBAR SOLO EN PRODUCTOS -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
 
-<div class="row">
-    @if (!Model.Any())
-    {
-        <div class="col-12">
-            <div class="alert alert-info">No hay productos disponibles.</div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    
+                </li>
+
+                @if (User.Identity.IsAuthenticated)
+                {
+
+                    <li class="nav-item">
+                    <a class="nav-link" asp-controller="Products" asp-action="Index">
+                        <i class="bi bi-shop"></i> Productos
+                    </a>
+                </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Checkout" asp-action="History">
+                            <i class="bi bi-receipt"></i> Mis pedidos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Cart" asp-action="Index">
+                            <i class="bi bi-cart3"></i> Carrito de Compras
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                            <i class="bi bi-person-plus"></i> Registrarse
+                        </a>
+                    </li>
+                }
+
+                @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                            <i class="bi bi-gear"></i> Panel Admin
+                        </a>
+                    </li>
+                }
+            </ul>
         </div>
-    }
-    else
-    {
-        foreach (var product in Model)
+    </div>
+</nav>
+
+<!-- LISTADO DE PRODUCTOS -->
+<div class="container">
+    <h1 class="mb-4 text-center">🛍️ Catálogo de productos</h1>
+
+    <div class="row">
+        @if (!Model.Any())
         {
-            <div class="col-md-4 col-sm-6 mb-4">
-                <div class="card h-100">
-                    <img src="@(string.IsNullOrEmpty(product.ImagePath) ? Url.Content("~/imagenes/no-image.png") : product.ImagePath)"
-                         class="card-img-top"
-                         style="object-fit:cover; height:200px;"
-                         alt="@product.Name" />
-
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">@product.Name</h5>
-
-                        <p class="card-text text-truncate" title="@product.Description">
-                            @product.Description
-                        </p>
-
-                        <div class="mt-auto">
-                            <p class="h5 mb-2">@string.Format(System.Globalization.CultureInfo.GetCultureInfo("es-PE"), "{0:C}", product.Price)</p>
-
-                            <div class="d-flex justify-content-between align-items-center">
-                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-secondary btn-sm">
-                                    Ver
-                                </a>
-
-                                <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline-block">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="productId" value="@product.Id" />
-                                    <input type="number" name="qty" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width:80px;" />
-                                    <button type="submit" class="btn btn-primary btn-sm ms-2">Agregar al carrito</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-footer text-muted small">
-                        Stock: @product.Stock
-                    </div>
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    No hay productos disponibles en este momento. 
+                    <a asp-controller="Home" asp-action="Index" class="alert-link">Volver al inicio</a>
                 </div>
             </div>
         }
-    }
+        else
+        {
+            foreach (var product in Model)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img src="@(string.IsNullOrEmpty(product.ImagePath) ? Url.Content("~/imagenes/no-image.png") : product.ImagePath)"
+                             class="card-img-top rounded-top"
+                             style="object-fit:cover; height:200px;"
+                             alt="@product.Name" />
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate" title="@product.Name">@product.Name</h5>
+
+                            <p class="card-text text-muted text-truncate" title="@product.Description">
+                                @product.Description
+                            </p>
+
+                            <div class="mt-auto">
+                                <p class="h5 fw-bold text-success mb-3">
+                                    @string.Format(System.Globalization.CultureInfo.GetCultureInfo("es-PE"), "{0:C}", product.Price)
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+
+                                    <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <input type="number" name="qty" value="1" min="1" 
+                                               class="form-control form-control-sm me-2" style="width:70px;" />
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-cart-plus"></i> Agregar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-muted small text-center">
+                            <i class="bi bi-box-seam"></i> Stock: 
+                            <span class="fw-bold @(product.Stock > 0 ? "text-success" : "text-danger")">
+                                @product.Stock
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
 </div>

@@ -4,40 +4,110 @@
     ViewData["Title"] = "Historial de Compras";
 }
 
-<h2>📜 Historial de Compras</h2>
+<!-- NAVBAR SOLO EN HISTORY -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
 
-@if (Model == null || !Model.Any())
-{
-    <p>No tienes compras registradas.</p>
-}
-else
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th># Pedido</th>
-                <th>Fecha</th>
-                <th>Productos</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var order in Model.OrderByDescending(o => o.CreatedAt))
-        {
-            <tr>
-                <td>@order.Id</td>
-                <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                <td>
-                    <ul>
-                        @foreach (var item in order.Items)
-                        {
-                            <li>@item.Product.Name (x@item.Quantity) - @item.UnitPrice.ToString("C")</li>
-                        }
-                    </ul>
-                </td>
-                <td><strong>@order.Total.ToString("C")</strong></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Products" asp-action="Index">
+                        <i class="bi bi-shop"></i> Productos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link active" asp-controller="Checkout" asp-action="History">
+                        <i class="bi bi-receipt"></i> Mis pedidos
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Cart" asp-action="Index">
+                        <i class="bi bi-cart3"></i> Carrito de Compras
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                    </a>
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                </li>
+
+                @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                            <i class="bi bi-gear"></i> Panel Admin
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- HISTORIAL DE COMPRAS -->
+<div class="container">
+    <h2 class="mb-4 text-center">📜 Historial de Compras</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-bag-x"></i> No tienes compras registradas.
+            <br />
+            <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-sm mt-2">
+                Ir a comprar 🛒
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle shadow-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th># Pedido</th>
+                        <th>Fecha</th>
+                        <th>Productos</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var order in Model.OrderByDescending(o => o.CreatedAt))
+                {
+                    <tr>
+                        <td class="fw-bold">@order.Id</td>
+                        <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <ul class="mb-0">
+                                @foreach (var item in order.Items)
+                                {
+                                    <li>
+                                        <span class="fw-bold">@item.Product.Name</span>  
+                                        (<span class="text-primary">@item.Quantity UND</span>) – 
+                                        <span class="text-success">@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE"))</span>
+                                    </li>
+                                }
+                            </ul>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-success">
+                                @order.Total.ToString("C", new System.Globalization.CultureInfo("es-PE"))
+                            </span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

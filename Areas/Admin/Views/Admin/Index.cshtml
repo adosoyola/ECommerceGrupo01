@@ -2,24 +2,70 @@
     ViewData["Title"] = "Panel de Administración";
 }
 
-<h2>Panel de Administración</h2>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
 
-<div style="display:flex; gap:20px;">
-    <div>
-        <h3>Productos</h3>
-        <p>Total: @ViewBag.ProductCount</p>
-        <a href="/Admin/Products">Ver productos</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/Admin">⚙️ AdminPanel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Products">📦 Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Orders">🛒 Órdenes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Users">👥 Usuarios</a>
+                </li>
+                
+            </ul>
+        </div>
     </div>
+</nav>
 
-    <div>
-        <h3>Órdenes</h3>
-        <p>Total: @ViewBag.OrderCount</p>
-        <a href="/Admin/Orders">Ver órdenes</a>
-    </div>
+<div class="container">
+    <h2 class="mb-4">📊 Panel de Administración</h2>
 
-    <div>
-        <h3>Usuarios</h3>
-        <p>Total: @ViewBag.UserCount</p>
-        <a href="/Admin/Users">Ver usuarios</a>
+    <div class="row">
+        <!-- Productos -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary mb-3">
+                <div class="card-body text-center">
+                    <h3 class="card-title">📦 Productos</h3>
+                    <p class="card-text fs-4"><strong>@ViewBag.ProductCount</strong></p>
+                    <a href="/Admin/Products" class="btn btn-primary">Ver productos</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Órdenes -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success mb-3">
+                <div class="card-body text-center">
+                    <h3 class="card-title">🛒 Órdenes</h3>
+                    <p class="card-text fs-4"><strong>@ViewBag.OrderCount</strong></p>
+                    <a href="/Admin/Orders" class="btn btn-success">Ver órdenes</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-warning mb-3">
+                <div class="card-body text-center">
+                    <h3 class="card-title">👥 Usuarios</h3>
+                    <p class="card-text fs-4"><strong>@ViewBag.UserCount</strong></p>
+                    <a href="/Admin/Users" class="btn btn-warning text-white">Ver usuarios</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

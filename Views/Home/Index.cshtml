@@ -2,36 +2,136 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
-
 @{
     ViewData["Title"] = "SYSTEMCUSCO";
 }
 
-<div class="text-center">
-    <h1 class="display-4">SYSTEMCUSCO</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+
+                @* Si está logueado *@
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-shop" href="/Products"> Productos</a>
+                        </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-receipt" asp-controller="Checkout" asp-action="History"> Mis pedidos</a>
+                    </li>
+
+                    <li class="nav-item"><a class="nav-link bi bi-cart3" href="/Cart"> Carrito de Compras</a></li>
+
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-box-arrow-right" href="javascript:document.getElementById('logoutForm').submit();"> Cerrar sesión</a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-shop" href="/Products"> Productos</a>
+                        </li>
+                    <li class="nav-item"><a class="nav-link bi bi-cart3" href="/Cart"> Carrito de Compras</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-box-arrow-in-right" asp-area="Identity" asp-page="/Account/Login"> Iniciar sesión</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link bi bi-person-plus" asp-area="Identity" asp-page="/Account/Register"> Registrarse</a>
+                    </li>
+                }
+
+                @* Si es Admin *@
+                @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                {
+                    <li class="nav-item">
+                        <a class="nav-link text-danger bi bi-gear" asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                            Panel Admin
+                        </a>
+                    </li>
+                }
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container mt-4">
+
+    <!-- CARRUSEL -->
+    <div id="homeCarousel" class="carousel slide shadow-lg rounded" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#homeCarousel" data-bs-slide-to="2"></button>
+        </div>
+
+        <div class="carousel-inner rounded">
+            <div class="carousel-item active">
+                <img src="~/images/banner1.webp" class="d-block w-100" alt="Promo 1" style="height:400px; object-fit:cover;">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                    <h5>Bienvenido a SYSTEMCUSCO</h5>
+                    <p>Encuentra los mejores productos tecnológicos 🖥️</p>
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <img src="~/images/banner2.webp" class="d-block w-100" alt="Promo 2" style="height:400px; object-fit:cover;">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                    <h5>Ofertas Especiales</h5>
+                    <p>Aprovecha descuentos exclusivos 🔥</p>
+                </div>
+            </div>
+
+            <div class="carousel-item">
+                <img src="~/images/banner3.jpg" class="d-block w-100" alt="Promo 3" style="height:400px; object-fit:cover;">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                    <h5>Compra fácil y rápido</h5>
+                    <p>Agrega al carrito y recibe en tu casa 🚚</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de navegación -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#homeCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
+    </div>
+
+    <!-- TEXTO DE BIENVENIDA -->
+    <div class="text-center mt-5">
+        <h1 class="display-5 fw-bold">Bienvenido a SYSTEMCUSCO</h1>
+        <p class="lead">Tu tienda virtual de confianza en Cusco 🌄</p>
+        <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-lg mt-3">
+            Explorar Productos 🛒
+        </a>
+    </div>
 </div>
 
-@if (User.Identity.IsAuthenticated)
-{
-    <li class="nav-item">
-        <a class="nav-link" href="/Checkout/History">Mis pedidos</a>
-    </li>
-}
 
-@if (User.Identity.IsAuthenticated)
-{
-    <li class="nav-item">
-        <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">Cerrar sesión</a>
-        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
-    </li>
-}
 
-@if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
-{
-    <li class="nav-item">
-        <a class="nav-link text-danger" asp-area="Admin" asp-controller="Admin" asp-action="Index">
-            Panel Admin
-        </a>
-    </li>
-}
+
+<div class="container mt-4">
+    <div class="text-center">
+       
+       <!-- <p>Aprende sobre <a href="https://learn.microsoft.com/aspnet/core" target="_blank">ASP.NET Core</a>.</p>-->
+    </div>
+
+   
+</div>
