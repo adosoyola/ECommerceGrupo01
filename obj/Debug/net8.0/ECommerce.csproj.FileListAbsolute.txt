@@ -263,3 +263,4 @@ C:\Users\proye\Desktop\UNIVERSIDAD CONTINENTAL\IX\Pruebas y calidad de software\
 C:\Users\proye\Desktop\UNIVERSIDAD CONTINENTAL\IX\Pruebas y calidad de software\ecommerce\ECommerce\bin\Debug\net8.0\zh-Hant\Microsoft.CodeAnalysis.Scripting.resources.dll
 C:\Users\proye\Desktop\UNIVERSIDAD CONTINENTAL\IX\Pruebas y calidad de software\ecommerce\ECommerce\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\proye\Desktop\UNIVERSIDAD CONTINENTAL\IX\Pruebas y calidad de software\ecommerce\ECommerce\obj\Debug\net8.0\ECommerce.sourcelink.json
+c:\Users\proye\Desktop\UNIVERSIDAD CONTINENTAL\IX\Pruebas y calidad de software\ecommerce\ECommerce\bin\Debug\net8.0\Stripe.net.dll

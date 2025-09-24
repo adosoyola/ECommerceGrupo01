@@ -27,6 +27,8 @@ namespace ECommerce.Areas.Admin.Controllers
         }
 
         // GET: Admin/Products/Create
+
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
@@ -102,36 +104,37 @@ namespace ECommerce.Areas.Admin.Controllers
         // POST: Admin/Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product, IFormFile ImageFile)
+        
+                public async Task<IActionResult> Edit(int id, Product product, IFormFile ImageFile)
         {
 
             if (ModelState.IsValid)
             {
                 try
-        {
-            if (ImageFile != null && ImageFile.Length > 0)
-            {
-                var fileName = Path.GetFileName(ImageFile.FileName);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "/images/", fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await ImageFile.CopyToAsync(stream);
+                    if (ImageFile != null && ImageFile.Length > 0)
+                    {
+                        var fileName = Path.GetFileName(ImageFile.FileName);
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "/images/", fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await ImageFile.CopyToAsync(stream);
+                        }
+
+                        product.ImagePath = "/images/" + fileName;
+                    }
+
+
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_db.Products.Any(e => e.Id == product.Id))
+                        return NotFound();
+                    else
+                        throw;
                 }
 
-                product.ImagePath = "/images/" + fileName;
-            }
-
-            
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!_db.Products.Any(e => e.Id == product.Id))
-                return NotFound();
-            else
-                throw;
-        }
-        
 
 
                 _db.Products.Update(product);

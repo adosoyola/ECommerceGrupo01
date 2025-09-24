@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "zluUABKdons=",
+  "dgSpecHash": "6g8BPK0u2dc=",
   "success": true,
   "projectFilePath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\ECommerce.csproj",
   "expectedPackageFiles": [
@@ -133,6 +133,7 @@
     "C:\\Users\\proye\\.nuget\\packages\\nuget.projectmodel\\6.11.0\\nuget.projectmodel.6.11.0.nupkg.sha512",
     "C:\\Users\\proye\\.nuget\\packages\\nuget.protocol\\6.11.0\\nuget.protocol.6.11.0.nupkg.sha512",
     "C:\\Users\\proye\\.nuget\\packages\\nuget.versioning\\6.11.0\\nuget.versioning.6.11.0.nupkg.sha512",
+    "C:\\Users\\proye\\.nuget\\packages\\stripe.net\\48.5.0\\stripe.net.48.5.0.nupkg.sha512",
     "C:\\Users\\proye\\.nuget\\packages\\swashbuckle.aspnetcore\\9.0.4\\swashbuckle.aspnetcore.9.0.4.nupkg.sha512",
     "C:\\Users\\proye\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\9.0.4\\swashbuckle.aspnetcore.swagger.9.0.4.nupkg.sha512",
     "C:\\Users\\proye\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\9.0.4\\swashbuckle.aspnetcore.swaggergen.9.0.4.nupkg.sha512",

@@ -103,7 +103,19 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            
+            //returnUrl ??= Url.Content("~/");
+
+            // 👇 Si no viene returnUrl o apunta a un POST (como /Payments/CreateCheckoutSession), lo mandamos al carrito
+             if (string.IsNullOrEmpty(returnUrl) || returnUrl.Contains("Payments/CreateCheckoutSession"))
+                {
+                    returnUrl = Url.Action("Index", "Cart", new { area = "" }); // 👈 fuera del área Identity
+
+                }
+                
+
+
+
 
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 

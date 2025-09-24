@@ -17,6 +17,7 @@
   </PackageReference>
   <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
   <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  <PackageReference Include="Stripe.net" Version="48.5.0" />
   <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
 </ItemGroup>
 

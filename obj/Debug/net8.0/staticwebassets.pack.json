@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\advance.jpg",
+      "PackagePath": "staticwebassets\\images\\advance.jpg"
+    },
+    {
       "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\banner1.webp",
       "PackagePath": "staticwebassets\\images\\banner1.webp"
     },
@@ -25,12 +29,52 @@
       "PackagePath": "staticwebassets\\images\\banner3.jpg"
     },
     {
-      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\impresora.jpg",
-      "PackagePath": "staticwebassets\\images\\impresora.jpg"
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\impre.jpg",
+      "PackagePath": "staticwebassets\\images\\impre.jpg"
     },
     {
       "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\laptop.jpg",
       "PackagePath": "staticwebassets\\images\\laptop.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\monitor.jpg",
+      "PackagePath": "staticwebassets\\images\\monitor.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\mouse.webp",
+      "PackagePath": "staticwebassets\\images\\mouse.webp"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\nbg.jpg",
+      "PackagePath": "staticwebassets\\images\\nbg.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\pc.jpg",
+      "PackagePath": "staticwebassets\\images\\pc.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\ram.jpg",
+      "PackagePath": "staticwebassets\\images\\ram.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\router.jpg",
+      "PackagePath": "staticwebassets\\images\\router.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\ssd.jpg",
+      "PackagePath": "staticwebassets\\images\\ssd.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\tablet.jpg",
+      "PackagePath": "staticwebassets\\images\\tablet.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\tintanegra.jpg",
+      "PackagePath": "staticwebassets\\images\\tintanegra.jpg"
+    },
+    {
+      "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\images\\webcam.jpg",
+      "PackagePath": "staticwebassets\\images\\webcam.jpg"
     },
     {
       "Id": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\wwwroot\\js\\site.js",

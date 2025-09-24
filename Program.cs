@@ -3,6 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using ECommerce.Data;
 using ECommerce.Services; // <- EmailSender dummy
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Stripe;
+
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +42,15 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+
+
+// Configuración Stripe
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+
+
 
 var app = builder.Build();
 

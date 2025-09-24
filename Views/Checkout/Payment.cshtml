@@ -4,31 +4,275 @@
     ViewData["Title"] = "Pago";
 }
 
-<h2>💳 Pago con tarjeta</h2>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h2 class="text-center">💳 Pago con tarjeta</h2>
+        </div>
 
-<form asp-action="Payment" method="post">
-    <div class="form-group">
-        <label asp-for="CardNumber"></label>
-        <input asp-for="CardNumber" class="form-control" />
-        <span asp-validation-for="CardNumber" class="text-danger"></span>
+        <!-- IZQUIERDA: Resumen de compra -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Resumen de compra</h5>
+                </div>
+
+                <div class="card-body">
+                    <!-- Aquí puedes mostrar los productos dinámicamente si necesitas -->
+                    <div class="d-flex justify-content-between">
+                        <div>Subtotal</div>
+                        <div class="fw-bold">@Model.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-PE"))</div>
+                    </div>
+
+                    <!-- ejemplo de impuestos/envío (ajusta según lógica real) -->
+                    <div class="d-flex justify-content-between mt-2">
+                        <div>Envío</div>
+                        <div class="text-muted">Gratis</div>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="h5 mb-0">Total</div>
+                        <div class="h5 mb-0 text-success fw-bold">@Model.Amount.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-PE"))</div>
+                    </div>
+
+                    <hr />
+
+                    <div class="mt-3">
+                        <h6 class="mb-2">Métodos de pago aceptados</h6>
+                        <div class="d-flex gap-3">
+                            <i class="bi bi-credit-card fs-3" title="Tarjeta"></i>
+                            <i class="bi bi-paypal fs-3 text-primary" title="PayPal"></i>
+                            <i class="bi bi-wallet2 fs-3 text-secondary" title="Wallet"></i>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            Tus datos están protegidos. No almacenamos números de tarjeta en texto plano.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DERECHA: Formulario de tarjeta -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-lock-fill me-2"></i> Pago seguro
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="Payment" method="post" novalidate onsubmit="return validatePaymentForm();">
+                        @Html.AntiForgeryToken()
+
+                        <!-- PREVIEW TARJETA -->
+                        <div class="mb-3">
+                            <div class="card bg-dark text-white p-3 rounded-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <small class="text-muted">Tarjeta</small>
+                                        <div id="card-brand" class="fw-bold">—</div>
+                                    </div>
+                                    <div>
+                                        <i id="brand-icon" class="bi bi-credit-card fs-3"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div id="card-number-preview" class="h5 mb-1">•••• •••• •••• ••••</div>
+                                    <div class="d-flex justify-content-between">
+                                        <small id="card-holder-preview" class="text-muted">Titular</small>
+                                        <small id="card-exp-preview" class="text-muted">MM/AA</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Número de tarjeta -->
+                        <div class="mb-3">
+                            <label for="CardNumber" class="form-label">Número de tarjeta</label>
+                            <div class="input-group">
+                                <input asp-for="CardNumber" id="CardNumber" name="CardNumber" maxlength="23"
+                                       class="form-control" placeholder="1234 5678 9012 3456"
+                                       autocomplete="cc-number" inputmode="numeric" />
+                                <span class="input-group-text"><i id="cc-icon" class="bi bi-credit-card"></i></span>
+                            </div>
+                            <span asp-validation-for="CardNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <!-- Expiración -->
+                            <div class="col-6 mb-3">
+                                <label for="Expiration" class="form-label">Expiración</label>
+                                <input asp-for="Expiration" id="Expiration" name="Expiration" maxlength="5"
+                                       class="form-control" placeholder="MM/AA" autocomplete="cc-exp" inputmode="numeric" />
+                                <span asp-validation-for="Expiration" class="text-danger"></span>
+                            </div>
+
+                            <!-- CVV -->
+                            <div class="col-6 mb-3">
+                                <label for="CVV" class="form-label">CVV</label>
+                                <input asp-for="CVV" id="CVV" name="CVV" maxlength="4"
+                                       class="form-control" placeholder="123" autocomplete="cc-csc" inputmode="numeric" />
+                                <span asp-validation-for="CVV" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Importe</label>
+                            <input asp-for="Amount" class="form-control" readonly />
+                        </div>
+
+                        <div class="d-grid">
+                            <button id="payButton" type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-lock-fill me-2"></i> Pagar ahora
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mensajes de ayuda -->
+            <div class="mt-3 text-muted small">
+                <p class="mb-1"><strong>Consejo:</strong> usa 4111 1111 1111 1111 para probar pagos simulados (Visa)</p>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="form-group">
-        <label asp-for="Expiration"></label>
-        <input asp-for="Expiration" class="form-control" placeholder="MM/AA" />
-        <span asp-validation-for="Expiration" class="text-danger"></span>
-    </div>
+@section Scripts {
+    <script>
+        // --- Helpers: formato y detección de marca (simple) ---
+        function setCardPreview(number, exp) {
+            const preview = document.getElementById('card-number-preview');
+            const expPreview = document.getElementById('card-exp-preview');
+            preview.textContent = number ? number : '•••• •••• •••• ••••';
+            expPreview.textContent = exp ? exp : 'MM/AA';
+        }
 
-    <div class="form-group">
-        <label asp-for="CVV"></label>
-        <input asp-for="CVV" class="form-control" />
-        <span asp-validation-for="CVV" class="text-danger"></span>
-    </div>
+        function detectCardBrand(number) {
+            // Número sin espacios
+            const n = (number || '').replace(/\s+/g, '');
+            const brandIcon = document.getElementById('brand-icon');
+            const brandText = document.getElementById('card-brand');
+            const ccIcon = document.getElementById('cc-icon');
 
-    <div class="form-group">
-        <label asp-for="Amount"></label>
-        <input asp-for="Amount" class="form-control" readonly />
-    </div>
+            if (/^4/.test(n)) {
+                brandText.textContent = 'VISA';
+                brandIcon.className = 'bi bi-credit-card-fill';
+                ccIcon.className = 'bi bi-credit-card-2-back';
+            } else if (/^5[1-5]/.test(n) || /^2(?:2[2-9]|[3-6]\d|7[01])/.test(n)) {
+                brandText.textContent = 'Mastercard';
+                brandIcon.className = 'bi bi-credit-card-fill';
+                ccIcon.className = 'bi bi-credit-card';
+            } else if (/^3[47]/.test(n)) {
+                brandText.textContent = 'AMEX';
+                brandIcon.className = 'bi bi-credit-card-fill';
+                ccIcon.className = 'bi bi-credit-card';
+            } else {
+                brandText.textContent = '—';
+                brandIcon.className = 'bi bi-credit-card';
+                ccIcon.className = 'bi bi-credit-card';
+            }
+        }
 
-    <button type="submit" class="btn btn-success">Confirmar Pago</button>
-</form>
+        // Formateo: agrupa en 4 dígitos y limita longitud
+        function formatCardNumber(value) {
+            // eliminar todo menos dígitos
+            const digits = value.replace(/\D/g, '').slice(0, 19); // admite hasta 19 (Amex 15, etc.)
+            // agrupar en 4s (para visual)
+            const groups = [];
+            for (let i = 0; i < digits.length; i += 4) {
+                groups.push(digits.substring(i, i + 4));
+            }
+            return groups.join(' ');
+        }
+
+        // Inserta slash en expiración: MM/AA
+        function formatExpiration(value) {
+            const digits = value.replace(/\D/g, '').slice(0, 4); // MMYY
+            if (digits.length <= 2) return digits;
+            return digits.slice(0, 2) + '/' + digits.slice(2);
+        }
+
+        // --- Eventos ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const cardInput = document.getElementById('CardNumber');
+            const expInput = document.getElementById('Expiration');
+            const cvvInput = document.getElementById('CVV');
+
+            cardInput.addEventListener('input', function (e) {
+                const formatted = formatCardNumber(this.value);
+                this.value = formatted;
+                setCardPreview(formatted, expInput.value);
+                detectCardBrand(formatted);
+            });
+
+            expInput.addEventListener('input', function (e) {
+                const formatted = formatExpiration(this.value);
+                this.value = formatted;
+                setCardPreview(cardInput.value, formatted);
+            });
+
+            // permitir solo dígitos en CVV
+            cvvInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 4);
+            });
+
+            // si Amount viene vacío o con coma, formatearlo (opcional)
+            const amountInput = document.querySelector('input[name="Amount"]');
+            if (amountInput) {
+                // formatea en es-PE para mostrar
+                const v = parseFloat(amountInput.value);
+                if (!isNaN(v)) {
+                    amountInput.value = v.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' });
+                }
+            }
+        });
+
+        // --- Validación básica antes de submit ---
+        function validatePaymentForm() {
+            const card = document.getElementById('CardNumber').value.replace(/\s+/g, '');
+            const exp = document.getElementById('Expiration').value;
+            const cvv = document.getElementById('CVV').value;
+
+            if (!card || card.length < 13) {
+                alert('Ingrese un número de tarjeta válido.');
+                return false;
+            }
+
+            // expiración formato MM/AA
+            const m = exp.split('/');
+            if (m.length !== 2 || m[0].length !== 2 || m[1].length !== 2) {
+                alert('Ingrese la fecha de expiración en formato MM/AA.');
+                return false;
+            }
+
+            // Validar mes
+            const month = parseInt(m[0], 10);
+            if (isNaN(month) || month < 1 || month > 12) {
+                alert('Mes de expiración inválido.');
+                return false;
+            }
+
+            // validar CVV
+            if (!/^\d{3,4}$/.test(cvv)) {
+                alert('Ingrese un CVV válido (3 o 4 dígitos).');
+                return false;
+            }
+
+            // si todo ok, transformar Amount de display (S/. x) a número plano si tu controlador lo espera así
+            const amountInput = document.querySelector('input[name="Amount"]');
+            if (amountInput) {
+                // remover símbolos y puntos, reemplazar coma por punto
+                const cleaned = amountInput.value.replace(/[^0-9,.-]+/g, '').replace(',', '.');
+                amountInput.value = parseFloat(cleaned).toFixed(2);
+            }
+
+            // permitir submit
+            return true;
+        }
+    </script>
+}

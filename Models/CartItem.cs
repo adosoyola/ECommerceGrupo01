@@ -8,5 +8,7 @@ namespace ECommerce.Models
         public int Quantity { get; set; }
 
         public decimal Total => UnitPrice * Quantity;
+
+       
     }
 }

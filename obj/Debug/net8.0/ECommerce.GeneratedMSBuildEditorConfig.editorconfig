@@ -214,6 +214,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2FydFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Checkout/Checkout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2hlY2tvdXRcQ2hlY2tvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Checkout/Confirm.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ2hlY2tvdXRcQ29uZmlybS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -232,6 +236,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Payments/Cancel.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGF5bWVudHNcQ2FuY2VsLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Payments/Success.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGF5bWVudHNcU3VjY2Vzcy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/proye/Desktop/UNIVERSIDAD CONTINENTAL/IX/Pruebas y calidad de software/ecommerce/ECommerce/Views/Products/Details.cshtml]

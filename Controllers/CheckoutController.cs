@@ -5,6 +5,8 @@ using ECommerce.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Stripe.Checkout;
+
 
 
 public class CheckoutController : Controller
@@ -86,27 +88,28 @@ public IActionResult PreConfirm()
         return View(new PaymentViewModel { Amount = total });
     }
 
-[HttpPost]
-public async Task<IActionResult> Payment(PaymentViewModel model)
-{
-    if (!ModelState.IsValid)
-        return View(model);
-
-    // Simulación de validación
-    if (model.CardNumber.StartsWith("4"))
+    [HttpPost]
+    public async Task<IActionResult> Payment(PaymentViewModel model)
     {
-        // ✅ Marcar que ya tiene tarjeta en esta sesión
-        HttpContext.Session.SetString(PaymentSessionKey, "true");
-        // Tarjetas que empiezan con 4 → pago aprobado
+        if (!ModelState.IsValid)
+            return View(model);
+
+        // Simulación de validación
+        if (model.CardNumber.StartsWith("4"))
+        {
+            // ✅ Marcar que ya tiene tarjeta en esta sesión
+            HttpContext.Session.SetString(PaymentSessionKey, "true");
+            // Tarjetas que empiezan con 4 → pago aprobado
             return RedirectToAction("Confirm");
 
+        }
+        else
+        {
+            ModelState.AddModelError("", "Pago rechazado. Intente con otra tarjeta.");
+            return View(model);
+        }
     }
-    else
-    {
-        ModelState.AddModelError("", "Pago rechazado. Intente con otra tarjeta.");
-        return View(model);
-    }
-}
+
 
     [Authorize]
     [HttpPost, ActionName("Confirm")]

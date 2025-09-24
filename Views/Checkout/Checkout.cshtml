@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2>Detalle de compra</h2>
+<ul>
+    <li>Producto: Monitor Samsung</li>
+    <li>Cantidad: 1</li>
+    <li>Precio: $1200</li>
+</ul>
+
+<form  asp-action="CreateCheckoutSession" method="post">
+    <input type="hidden" name="amount" value="1200" />
+    <button type="submit" class="btn btn-success">Pagar con Stripe</button>
+</form>

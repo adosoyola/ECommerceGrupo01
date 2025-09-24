@@ -13,10 +13,21 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    public IActionResult Index()
-    {
-        return View();
+    public IActionResult Index(string payment)
+{
+        if (payment == "success")
+        {
+            ViewBag.Message = "✅ Pago realizado con éxito.";
+        
+        
     }
+        else if (payment == "cancel")
+        {
+            ViewBag.Message = "⚠️ El pago fue cancelado.";
+        }
+
+    return View();
+}
 
     public IActionResult Privacy()
     {

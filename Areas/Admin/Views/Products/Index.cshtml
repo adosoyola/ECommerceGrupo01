@@ -1,16 +1,26 @@
 @model IEnumerable<ECommerce.Models.Product>
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+@{
+    ViewData["Title"] = "Lista de Productos";
+}
 
-<h2>Lista de Productos</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">📦 Lista de Productos</h2>
+   <a asp-area="Admin" asp-controller="Products" asp-action="Create" class="btn btn-success" href="/Admin/Products/Create">
+    ➕ Nuevo Producto
+</a>
 
-<a asp-action="Create" class="btn btn-success">Nuevo Producto</a>
+</div>
 
-<table class="table table-striped">
-    <thead>
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
         <tr>
             <th>Nombre</th>
             <th>Precio</th>
-            <th>Imagen</th>
-            <th></th>
+            <th class="text-center">Imagen</th>
+            <th style="width:0 auto;">Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -18,17 +28,17 @@
     {
         <tr>
             <td>@item.Name</td>
-            <td>@item.Price</td>
-            <td>
-                @if (!string.IsNullOrEmpty(item.ImagePath))
-                {
-                    <img src="@item.ImagePath" width="100"/>
-                }
+            <td>@string.Format(System.Globalization.CultureInfo.GetCultureInfo("es-PE"), "{0:C}", item.Price)</td>
+            <td class="text-center">
+                <img src="@(string.IsNullOrEmpty(item.ImagePath) ? Url.Content("~/imagenes/no-image.png") : item.ImagePath)" 
+                     alt="@item.Name"
+                     width="100"
+                     class="img-thumbnail" />
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Editar</a>
-                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Eliminar</a>
-                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Detalles</a>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">✏️ Editar</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">🗑️ Eliminar</a>
+                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">ℹ️ Detalles</a>
             </td>
         </tr>
     }

@@ -1,55 +1,80 @@
 @model ECommerce.Models.Product
 
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
     ViewData["Title"] = "Crear Producto";
 }
 
-<!--<div asp-validation-summary="All" class="text-danger"></div>--> 
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white text-center fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i> Crear Producto
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" asp-controller="Products" asp-area="Admin" enctype="multipart/form-data" method="post">
+                        @Html.AntiForgeryToken()
 
-<h2>Crear Producto</h2>
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-<form asp-action="Create" asp-controller="Products" asp-area="Admin" enctype="multipart/form-data" method="post">
-    @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-semibold">
+                                <i class="bi bi-box-seam me-1"></i> Nombre
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Ej: Laptop HP 14''" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div> 
+                        <div class="mb-3">
+                            <label asp-for="Price" class="form-label fw-semibold">
+                                <i class="bi bi-cash-coin me-1"></i> Precio
+                            </label>
+                            <input asp-for="Price" class="form-control" type="number" step="0.01" lang="en" placeholder="0.00" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
 
-    
-    <div class="form-group mb-3">
-        <label asp-for="Name" class="form-label">Nombre</label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+                        <div class="mb-3">
+                            <label asp-for="Stock" class="form-label fw-semibold">
+                                <i class="bi bi-clipboard-data me-1"></i> Stock
+                            </label>
+                            <input asp-for="Stock" class="form-control" type="number" placeholder="Cantidad disponible" />
+                            <span asp-validation-for="Stock" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label fw-semibold">
+                                <i class="bi bi-card-text me-1"></i> Descripción
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Escribe una breve descripción del producto"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label fw-semibold">
+                                <i class="bi bi-image me-1"></i> Imagen del Producto
+                            </label>
+                            <input type="file" asp-for="ImageFile" class="form-control" />
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Index" asp-controller="Products" asp-area="Admin" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save me-1"></i> Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Price" class="form-label">Precio</label>
-        <input asp-for="Price" class="form-control" type="number" step="0.01" lang="en" />
-        <!--<input asp-for="Price" class="form-control" type="number" step="0.01" />-->
-        <span asp-validation-for="Price" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Stock" class="form-label">Stock</label>
-        <input asp-for="Stock" class="form-control" type="number" />
-        <span asp-validation-for="Stock" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Description" class="form-label">Descripción</label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <!-- 👇 Campo para subir imagen -->
-    <div class="form-group mb-3">
-        <label asp-for="ImageFile" class="form-label">Imagen del Producto</label>
-        <input type="file" asp-for="ImageFile" class="form-control" />
-        <span asp-validation-for="ImageFile" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" asp-controller="Products" asp-area="Admin" class="btn btn-secondary">Cancelar</a>
-
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

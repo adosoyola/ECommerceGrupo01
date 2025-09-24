@@ -137,13 +137,20 @@
             
             <div class="d-flex justify-content-end">
             <form asp-controller="Products" asp-action="Index" method="get">
-                <button type="submit" class="btn btn-warning btn-lg">Seguir comprando</button>
+                <button type="submit" class="btn btn-warning btn-sm">Seguir comprando</button>
             </form>
             </div class="d-flex justify-content-end">
             <div>
-            <form asp-controller="Checkout" asp-action="PreConfirm" method="get">
-                <button type="submit" class="btn btn-success btn-lg">✅ Confirmar compra</button>
+            
+          <!-- <form asp-controller="Checkout" asp-action="PreConfirm" method="get">
+                <button type="submit" class="btn btn-success btn-sm">✅ Confirmar compra</button>
+            </form> -->
+
+            <form asp-controller="Payments" asp-action="CreateCheckoutSession" method="post">
+             <input type="hidden" name="amount" value="1200" />
+             <button type="submit" class="btn btn-success btn-sm">Pagar con Stripe</button>
             </form>
+
         </div>
         </div>
     }
