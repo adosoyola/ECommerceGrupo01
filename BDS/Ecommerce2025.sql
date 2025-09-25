@@ -1,6 +1,4 @@
 
-DELETE FROM Products
-WHERE Name = 'Impresora';
 
 
 INSERT INTO Products (Name, Price, Stock, Description,ImagePath)
