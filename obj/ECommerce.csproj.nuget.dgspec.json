@@ -1,25 +1,32 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\ECommerce.csproj": {}
+    "C:\\Users\\TNTKing\\Desktop\\Pruebas_y_Calidad_de_Software\\ECommerceGrupo01\\ECommerce.csproj": {}
   },
   "projects": {
-    "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\ECommerce.csproj": {
+    "C:\\Users\\TNTKing\\Desktop\\Pruebas_y_Calidad_de_Software\\ECommerceGrupo01\\ECommerce.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\ECommerce.csproj",
+        "projectUniqueName": "C:\\Users\\TNTKing\\Desktop\\Pruebas_y_Calidad_de_Software\\ECommerceGrupo01\\ECommerce.csproj",
         "projectName": "ECommerce",
-        "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\ECommerce.csproj",
-        "packagesPath": "C:\\Users\\proye\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\ecommerce\\ECommerce\\obj\\",
+        "projectPath": "C:\\Users\\TNTKing\\Desktop\\Pruebas_y_Calidad_de_Software\\ECommerceGrupo01\\ECommerce.csproj",
+        "packagesPath": "C:\\Users\\TNTKing\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\TNTKing\\Desktop\\Pruebas_y_Calidad_de_Software\\ECommerceGrupo01\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\proye\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\TNTKing\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -37,7 +44,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
         "net8.0": {
@@ -101,7 +109,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
