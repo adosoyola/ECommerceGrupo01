@@ -6,12 +6,16 @@
 
 <!-- NAVBAR SOLO EN HISTORY -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+
+
+
+
     <div class="container-fluid">
+
         <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
-                aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -39,7 +43,8 @@
                     <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
                         <i class="bi bi-box-arrow-right"></i> Cerrar sesión
                     </a>
-                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none"></form>
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none">
+                    </form>
                 </li>
 
                 @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
@@ -82,30 +87,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var order in Model.OrderByDescending(o => o.CreatedAt))
-                {
-                    <tr>
-                        <td class="fw-bold">@order.Id</td>
-                        <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
-                            <ul class="mb-0">
-                                @foreach (var item in order.Items)
-                                {
-                                    <li>
-                                        <span class="fw-bold">@item.Product.Name</span>  
-                                        (<span class="text-primary">@item.Quantity UND</span>) – 
-                                        <span class="text-success">@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE"))</span>
-                                    </li>
-                                }
-                            </ul>
-                        </td>
-                        <td>
-                            <span class="fw-bold text-success">
-                                @order.Total.ToString("C", new System.Globalization.CultureInfo("es-PE"))
-                            </span>
-                        </td>
-                    </tr>
-                }
+                    @foreach (var order in Model.OrderByDescending(o => o.CreatedAt))
+                    {
+                        <tr>
+                            <td class="fw-bold">@order.Id</td>
+                            <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <ul class="mb-0">
+                                    @foreach (var item in order.Items)
+                                    {
+                                        <li>
+                                            <span class="fw-bold">@item.Product.Name</span>
+                                            (<span class="text-primary">@item.Quantity UND</span>) –
+                                            <span class="text-success">@item.UnitPrice.ToString("C", new
+                                                                                    System.Globalization.CultureInfo("es-PE"))</span>
+                            </li>
+                                                        }
+                                </ul>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-success">
+                                    @order.Total.ToString("C", new System.Globalization.CultureInfo("es-PE"))
+                                </span>
+                            </td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>

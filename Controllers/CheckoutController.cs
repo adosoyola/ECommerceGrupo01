@@ -24,30 +24,30 @@ public class CheckoutController : Controller
 
     //
 
-   [HttpGet]
-public IActionResult PreConfirm()
-{
-    if (!User.Identity.IsAuthenticated)
+    [HttpGet]
+    public IActionResult PreConfirm()
     {
-        // redirige al login de Identity
-        return Redirect("/Identity/Account/Login?returnUrl=/Checkout/Payment");
-    }
+        if (!User.Identity.IsAuthenticated)
+        {
+            // redirige al login de Identity
+            return Redirect("/Identity/Account/Login?returnUrl=/Checkout/Payment");
+        }
 
-    // ✅ Verificar si ya tiene datos de pago en la sesión
-    var hasPayment = HttpContext.Session.GetString(PaymentSessionKey) == "true";
-    if (hasPayment)
-    {
-        // Si ya tiene tarjeta, lo mandamos directo a Confirm
-        return RedirectToAction("Confirm");
-    }
+        // ✅ Verificar si ya tiene datos de pago en la sesión
+        var hasPayment = HttpContext.Session.GetString(PaymentSessionKey) == "true";
+        if (hasPayment)
+        {
+            // Si ya tiene tarjeta, lo mandamos directo a Confirm
+            return RedirectToAction("Confirm");
+        }
 
-    return RedirectToAction("Payment");
-}
+        return RedirectToAction("Payment");
+    }
 
     [Authorize]// Solo usuarios logueados pueden ver su historial
-     
-     [HttpGet]
-        public async Task<IActionResult> History()
+
+    [HttpGet]
+    public async Task<IActionResult> History()
     {
         var userId = _userManager.GetUserId(User);
         var orders = await _db.Orders
@@ -73,8 +73,8 @@ public IActionResult PreConfirm()
     [HttpGet]
     public IActionResult Confirm()
     {
-    var cart = GetCart();
-    return View(cart);
+        var cart = GetCart();
+        return View(cart);
     }
 
     public IActionResult Payment()
@@ -113,8 +113,8 @@ public IActionResult PreConfirm()
 
     [Authorize]
     [HttpPost, ActionName("Confirm")]
-    
-    
+
+
     public async Task<IActionResult> ConfirmPost()
     {
         var cart = GetCart();
@@ -182,6 +182,7 @@ public IActionResult PreConfirm()
         SaveCart(new List<CartItem>());
 
         TempData["Success"] = "Compra realizada con éxito ✅";
-        return RedirectToAction("Index", "Home");
+        //return RedirectToAction("Index", "Home");
+        return RedirectToAction("History", "Checkout");
     }
 }

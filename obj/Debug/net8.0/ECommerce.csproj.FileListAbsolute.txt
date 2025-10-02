@@ -532,3 +532,6 @@ C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\obj\Debu
 C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\obj\Debug\net8.0\ECommerce.pdb
 C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\obj\Debug\net8.0\ECommerce.genruntimeconfig.cache
 C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\obj\Debug\net8.0\ref\ECommerce.dll
+C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\bin\Debug\net8.0\cypress\fixtures\example.json
+C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\bin\Debug\net8.0\package-lock.json
+C:\Users\TNTKing\Desktop\Pruebas_y_Calidad_de_Software\ECommerceGrupo01\bin\Debug\net8.0\package.json
