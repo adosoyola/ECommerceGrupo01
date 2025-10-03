@@ -5,9 +5,7 @@ using ECommerce.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Stripe.Checkout;
-
-
+// using Stripe.Checkout; // Eliminamos la referencia a Stripe para un flujo de pago interno
 
 public class CheckoutController : Controller
 {
@@ -22,140 +20,99 @@ public class CheckoutController : Controller
         _userManager = userManager;
     }
 
-    //
-
-    [HttpGet]
-    public IActionResult PreConfirm()
-    {
-        if (!User.Identity.IsAuthenticated)
-        {
-            // redirige al login de Identity
-            return Redirect("/Identity/Account/Login?returnUrl=/Checkout/Payment");
-        }
-
-        // ✅ Verificar si ya tiene datos de pago en la sesión
-        var hasPayment = HttpContext.Session.GetString(PaymentSessionKey) == "true";
-        if (hasPayment)
-        {
-            // Si ya tiene tarjeta, lo mandamos directo a Confirm
-            return RedirectToAction("Confirm");
-        }
-
-        return RedirectToAction("Payment");
-    }
-
-    [Authorize]// Solo usuarios logueados pueden ver su historial
-
-    [HttpGet]
-    public async Task<IActionResult> History()
-    {
-        var userId = _userManager.GetUserId(User);
-        var orders = await _db.Orders
-        .Where(o => o.UserId == userId)
-        .Include(o => o.Items) // para traer los productos de la orden
-        .ThenInclude(i => i.Product) // para mostrar nombre y datos del producto
-        .OrderByDescending(o => o.Id)
-        .ToListAsync();
-
-        return View(orders);
-    }
-
     private List<CartItem> GetCart()
     {
         var json = HttpContext.Session.GetString(SessionKey);
-        return json == null ? new List<CartItem>() : JsonConvert.DeserializeObject<List<CartItem>>(json);
+        return string.IsNullOrEmpty(json)
+            ? new List<CartItem>()
+            : JsonConvert.DeserializeObject<List<CartItem>>(json);
     }
 
     private void SaveCart(List<CartItem> cart)
     {
         HttpContext.Session.SetString(SessionKey, JsonConvert.SerializeObject(cart));
     }
+
+    // ACCIÓN 1: Muestra la página de resumen (GET /Checkout/Confirm). 
+    // Ahora redirige a la simulación.
+    [Authorize]
     [HttpGet]
     public IActionResult Confirm()
     {
         var cart = GetCart();
+        if (cart == null || !cart.Any())
+        {
+            TempData["Error"] = "El carrito está vacío.";
+            return RedirectToAction("Index", "Cart");
+        }
+
+        // Redirige al nuevo paso de simulación de pago
+        return RedirectToAction("PaymentSimulation");
+    }
+
+    // ACCIÓN 2: Muestra la vista de simulación de pago (GET /Checkout/PaymentSimulation)
+    // Se necesita crear la vista PaymentSimulation.cshtml
+    [Authorize]
+    [HttpGet]
+    public IActionResult PaymentSimulation()
+    {
+        var cart = GetCart();
+        if (cart == null || !cart.Any())
+        {
+            TempData["Error"] = "El carrito está vacío.";
+            return RedirectToAction("Index", "Cart");
+        }
+
+        // Pasa el carrito a la vista para mostrar el total y permitir el POST
         return View(cart);
     }
 
-    public IActionResult Payment()
-    {
-        var cart = GetCart();
-        if (cart == null || !cart.Any())
-            return RedirectToAction("Index", "Cart");
-
-        var total = cart.Sum(x => x.UnitPrice * x.Quantity);
-
-        return View(new PaymentViewModel { Amount = total });
-    }
-
+    // ACCIÓN 3: Procesa la creación de la orden (POST /Checkout/Confirm)
+    // 🔑 Solución al error CS0111: Usamos [ActionName] y un nombre de método diferente.
     [HttpPost]
-    public async Task<IActionResult> Payment(PaymentViewModel model)
-    {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        // Simulación de validación
-        if (model.CardNumber.StartsWith("4"))
-        {
-            // ✅ Marcar que ya tiene tarjeta en esta sesión
-            HttpContext.Session.SetString(PaymentSessionKey, "true");
-            // Tarjetas que empiezan con 4 → pago aprobado
-            return RedirectToAction("Confirm");
-
-        }
-        else
-        {
-            ModelState.AddModelError("", "Pago rechazado. Intente con otra tarjeta.");
-            return View(model);
-        }
-    }
-
-
+    [ActionName("Confirm")] // Esto mapea este método a la URL /Checkout/Confirm (POST)
     [Authorize]
-    [HttpPost, ActionName("Confirm")]
-
-
-    public async Task<IActionResult> ConfirmPost()
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmOrder(string paymentMethod) // paymentMethod viene del formulario de simulación
     {
         var cart = GetCart();
         if (cart == null || !cart.Any())
         {
-            TempData["Error"] = "Tu carrito está vacío";
+            TempData["Error"] = "El carrito está vacío.";
             return RedirectToAction("Index", "Cart");
         }
 
-        // Verificar stock
+        // 1. Verificación de Stock y usuario
         foreach (var item in cart)
         {
             var product = await _db.Products.FindAsync(item.ProductId);
-            if (product == null) continue;
-
-            if (product.Stock < item.Quantity)
+            if (product == null || product.Stock < item.Quantity)
             {
-                TempData["Error"] = $"No hay suficiente stock de {product.Name}";
+                TempData["Error"] = $"Stock insuficiente para {item.Name}.";
                 return RedirectToAction("Index", "Cart");
             }
         }
 
-
-
-        // Crear Order
-        var userId = _userManager.GetUserId(User) ?? "anonimo";
+        var userId = _userManager.GetUserId(User);
         if (userId == null)
         {
             return RedirectToAction("Login", "Account", new { area = "Identity" });
         }
+
+        // 2. Crear Order (Conexión directa a la DB)
         var order = new Order
         {
             UserId = userId,
             Total = cart.Sum(x => x.UnitPrice * x.Quantity),
-            Items = new List<ECommerce.Models.OrderItem>() // asegurar inicialización
-
+            CreatedAt = DateTime.Now,
+            // Si el modelo Order tiene una propiedad PaymentMethod, úsala aquí:
+            // PaymentMethod = paymentMethod, 
+            Items = new List<ECommerce.Models.OrderItem>()
         };
         _db.Orders.Add(order);
         await _db.SaveChangesAsync();
 
-        // Crear OrderItems y descontar stock
+        // 3. Crear OrderItems y descontar stock
         foreach (var item in cart)
         {
             var product = await _db.Products.FindAsync(item.ProductId);
@@ -172,17 +129,37 @@ public class CheckoutController : Controller
                 OrderId = order.Id
             };
 
-            order.Items.Add(orderItem);
             _db.OrderItems.Add(orderItem);
         }
 
         await _db.SaveChangesAsync();
 
-        // Vaciar carrito
-        SaveCart(new List<CartItem>());
+        // 4. Finalizar
+        SaveCart(new List<CartItem>()); // Vaciar carrito
 
-        TempData["Success"] = "Compra realizada con éxito ✅";
-        //return RedirectToAction("Index", "Home");
+        TempData["Success"] = $"Compra realizada con éxito ✅. Método de pago simulado: {paymentMethod}.";
         return RedirectToAction("History", "Checkout");
+    }
+
+    // ACCIÓN 4: Muestra el historial de compras
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> History()
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account", new { area = "Identity" });
+        }
+
+        // 🔑 Solución al NullReferenceException: Carga explícita de las relaciones.
+        var orders = await _db.Orders
+            .Where(o => o.UserId == userId)
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        return View(orders);
     }
 }

@@ -4,14 +4,9 @@
     ViewData["Title"] = "Historial de Compras";
 }
 
-<!-- NAVBAR SOLO EN HISTORY -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
 
-
-
-
     <div class="container-fluid">
-
         <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">SYSTEMCUSCO</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
@@ -60,9 +55,8 @@
     </div>
 </nav>
 
-<!-- HISTORIAL DE COMPRAS -->
 <div class="container">
-    <h2 class="mb-4 text-center">📜 Historial de Compras</h2>
+    <h1 class="mb-4 text-center">📜 Historial de Compras</h1> @* 🚩 Corregido a <h1> para Cypress *@
 
     @if (Model == null || !Model.Any())
     {
@@ -97,7 +91,8 @@
                                     @foreach (var item in order.Items)
                                     {
                                         <li>
-                                            <span class="fw-bold">@item.Product.Name</span>
+                                            @* 🔑 Verificación de nulidad en caso de fallos (aunque ya se corrigió en el controlador) *@
+                                            <span class="fw-bold">@(item.Product?.Name ?? item.ProductName)</span>
                                             (<span class="text-primary">@item.Quantity UND</span>) –
                                             <span class="text-success">@item.UnitPrice.ToString("C", new
                                                                                     System.Globalization.CultureInfo("es-PE"))</span>

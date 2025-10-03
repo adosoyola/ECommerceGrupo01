@@ -1,0 +1,114 @@
+@model List<ECommerce.Models.CartItem>
+
+@{
+    ViewData["Title"] = "Simulación de Pago";
+    var total = Model.Sum(x => x.UnitPrice * x.Quantity);
+    var totalFormatted = total.ToString("C", new System.Globalization.CultureInfo("es-PE"));
+}
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">💳 Finalizar Compra (Simulación)</h1>
+
+    <div class="row justify-content-center">
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Resumen del Pedido
+                </div>
+                <div class="card-body">
+                    <p class="h5">Productos:</p>
+                    <ul class="list-group list-group-flush mb-3">
+                        @foreach (var item in Model)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>@item.Name (@item.Quantity)</span>
+                                <strong>@(item.UnitPrice* item.Quantity).ToString("C", new
+                                    System.Globalization.CultureInfo("es-PE"))</strong>
+                            </li>
+                        }
+                    </ul>
+                    <h4 class="text-end">Total a Pagar: <span class="text-success fw-bold">@totalFormatted</span></h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-lg border-success">
+                <div class="card-header bg-success text-white">
+                    Método de Pago Simulado
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Checkout" asp-action="Confirm" method="post" id="payment-form">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="paymentMethod" value="Tarjeta de Crédito Simulada" />
+
+                        <div class="mb-3">
+                            <label for="cardName" class="form-label">Nombre en la tarjeta</label>
+                            <input type="text" id="cardName" name="cardName" class="form-control" required
+                                placeholder="Ej: JUAN PEREZ" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label">Número de tarjeta</label>
+                            <input type="text" id="cardNumber" name="cardNumber" class="form-control" required
+                                placeholder="XXXX XXXX XXXX XXXX" pattern="\d{4} \d{4} \d{4} \d{4}" maxlength="19"
+                                title="Formato: 16 dígitos" />
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label for="cardExpiry" class="form-label">Vencimiento (MM/AA)</label>
+                                <input type="text" id="cardExpiry" name="cardExpiry" class="form-control" required
+                                    placeholder="MM/AA" pattern="\d{2}/\d{2}" maxlength="5" title="Formato: MM/AA" />
+                            </div>
+                            <div class="col-6">
+                                <label for="cardCvc" class="form-label">Código de seguridad (CVC)</label>
+                                <input type="text" id="cardCvc" name="cardCvc" class="form-control" required
+                                    placeholder="CVC" pattern="\d{3,4}" maxlength="4" title="3 o 4 dígitos" />
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-lg btn-success">
+                                <i class="bi bi-lock-fill me-2"></i> Pagar @totalFormatted
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Cart" asp-action="Index" class="btn btn-link text-muted">Volver al Carrito</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Script de simulación de formato (opcional pero mejora la UX)
+        document.addEventListener('DOMContentLoaded', function () {
+            const cardNumber = document.getElementById('cardNumber');
+            const cardExpiry = document.getElementById('cardExpiry');
+
+            // Formatear el número de tarjeta (insertar espacios)
+            cardNumber.addEventListener('input', function (e) {
+                e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
+            });
+
+            // Formatear el vencimiento (insertar /)
+            cardExpiry.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/[^\d]/g, '');
+                if (value.length > 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+        });
+    </script>
+}
