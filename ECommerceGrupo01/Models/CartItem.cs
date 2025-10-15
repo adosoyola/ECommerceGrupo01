@@ -5,19 +5,18 @@ namespace ECommerce.Models
         public int ProductId { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
-        //public int Quantity { get; set; }
 
-        public decimal Total => UnitPrice * Quantity;
-
-       //cantidad menor a cero
+        // CORRECCIÓN: La propiedad Quantity estaba comentada
         private int _quantity;
-        public int Quantity 
+        public int Quantity
         {
             get => _quantity <= 0 ? 1 : _quantity;
             set => _quantity = value;
         }
 
-       public decimal GetSubtotal()
+        public decimal Total => UnitPrice * Quantity;
+
+        public decimal GetSubtotal()
         {
             return UnitPrice * Quantity;
         }

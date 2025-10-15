@@ -7,15 +7,13 @@ namespace ECommerce.Models
     {
         public int Id { get; set; }
 
-        // Relación con Order
+        // CORRECCIÓN: Hacer propiedades de navegación opcionales
         public int OrderId { get; set; }
-        public Order Order { get; set; }
+        public Order? Order { get; set; }
 
-        // Relación con Product
         public int ProductId { get; set; }
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
-        // Datos del producto al momento de la compra
         [Required]
         public string ProductName { get; set; } = string.Empty;
 
