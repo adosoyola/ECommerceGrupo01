@@ -33,7 +33,8 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // necesario para Identity
-
+//pago PaymentProcessor
+builder.Services.AddScoped<PaymentProcessor>();
 // Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

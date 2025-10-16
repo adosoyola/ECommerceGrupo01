@@ -19,8 +19,9 @@ namespace ECommerce.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
+        // ⚠️ COMENTAR o ELIMINAR temporalmente esta línea:
+        // public string PaymentMethod { get; set; } = "Tarjeta";
 
-        //public List<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public List<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
 }

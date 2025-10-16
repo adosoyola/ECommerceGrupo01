@@ -21,7 +21,7 @@ namespace ECommerce.Controllers
         public PaymentsController(ApplicationDbContext context, IConfiguration config, UserManager<IdentityUser> userManager)
         {
             _context = context;
-           
+
             _userManager = userManager;
         }
 
@@ -37,7 +37,7 @@ namespace ECommerce.Controllers
         public IActionResult CreateCheckoutSession()
         {
 
-            
+
             var domain = $"{Request.Scheme}://{Request.Host}";
             var cart = GetCart();
 
@@ -87,6 +87,18 @@ namespace ECommerce.Controllers
             Session session = service.Create(options);
 
             return Redirect(session.Url);
+        }
+        [Authorize]
+        [HttpGet]
+        public IActionResult Success()
+        {
+            // Limpiar el carrito después de una compra exitosa
+            HttpContext.Session.Remove(SessionKey);
+
+            ViewBag.Message = "¡Pago exitoso!";
+            ViewBag.PaymentStatus = "success";
+
+            return View();
         }
     }
 }
