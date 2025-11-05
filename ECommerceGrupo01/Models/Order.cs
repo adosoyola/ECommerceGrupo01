@@ -19,8 +19,11 @@ namespace ECommerce.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // ⚠️ COMENTAR o ELIMINAR temporalmente esta línea:
-        // public string PaymentMethod { get; set; } = "Tarjeta";
+        // 🆕 PROPIEDAD AÑADIDA: Inicializada en PedidoCreado
+        public OrderStatus Status { get; set; } = OrderStatus.PedidoCreado;
+
+        // Si tienes esta línea: // public string PaymentMethod { get; set; } = "Tarjeta"; 
+        // y ya no la usas, puedes eliminarla.
 
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
