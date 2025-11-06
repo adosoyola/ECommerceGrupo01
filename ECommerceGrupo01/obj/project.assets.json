@@ -8354,11 +8354,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ecommercegrupo01\\ECommerce.csproj",
+      "projectUniqueName": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
       "projectName": "ECommerce",
-      "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ecommercegrupo01\\ECommerce.csproj",
+      "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
       "packagesPath": "C:\\Users\\proye\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ecommercegrupo01\\obj\\",
+      "outputPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\proye\\AppData\\Roaming\\NuGet\\NuGet.Config"

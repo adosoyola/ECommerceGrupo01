@@ -1,138 +1,68 @@
 // user_auth_flow.cy.js
+// Archivo de pruebas para el Flujo de Autenticación de Usuarios (solo pruebas de Cliente)
 
 // Función para generar un correo electrónico único en cada prueba
 function generateRandomEmail() {
-  const randomString = Math.random().toString(36).substring(2, 8);
-  return `prueba_${randomString}@system.com`;
+    const randomString = Math.random().toString(36).substring(2, 8);
+    // Usamos el dominio 'system.com' para simular correos de prueba
+    return `prueba_user_${randomString}@system.com`; 
 }
 
-describe('Flujo de Autenticación de Usuarios (CORREGIDO)', () => {
+describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
 
-  const newEmail = generateRandomEmail();
-  const password = 'Test@';
+    const baseUrl = 'http://localhost:5012';
+    // Generamos un correo de cliente que usaremos en las pruebas 1 y 3
+    const clientEmail = generateRandomEmail();
+    const password = 'Test@123'; // Contraseña que cumple requisitos
+    
+    // ---------------------------------------------------------------------
+    // REQUISITO 1: Registro de clientes con validación de correo electrónico.
+    // ---------------------------------------------------------------------
+    it('1. Cliente: Debe registrar un nuevo usuario con éxito y redirigir a la página de inicio', () => {
+        cy.log('// Requisito: Registro de clientes con validación de correo electrónico.');
+        cy.visit(`${baseUrl}/Identity/Account/Register`);
+        cy.get('#Input_Email').type(clientEmail);
+        cy.get('#Input_Password').type(password);
+        cy.get('#Input_ConfirmPassword').type(password);
+        cy.get('button[type="submit"]').click();
+        
+        // Verificación de redirección al Home/Catálogo tras un registro exitoso.
+        cy.url().should('eq', `${baseUrl}/`); 
+    });
 
-  it('1. Debe registrar un nuevo usuario con éxito y redirigir a la página de inicio', () => {
-    cy.visit('http://localhost:5012/Identity/Account/Register');
-    cy.get('#Input_Email').type(newEmail);
-    cy.get('#Input_Password').type(password);
-    cy.get('#Input_ConfirmPassword').type(password);
-    cy.get('button[type="submit"]').click();
-    cy.url().should('eq', 'http://localhost:5012/');
-  });
+    it('2. Cliente: Debe mostrar un error cuando las contraseñas no coinciden', () => {
+        // Generamos un email único para esta prueba
+        const testEmail = generateRandomEmail();
+        const correctPassword = 'Password123!';
+        const wrongPassword = 'Password-wrong!';
 
-  it('2. Debe iniciar sesión con el nuevo usuario y redirigir al carrito', () => {
-    cy.visit('http://localhost:5012/Identity/Account/Login');
-    cy.get('#Input_Email').type(newEmail);
-    cy.get('#Input_Password').type(password);
-    cy.get('button[type="submit"]').click();
+        cy.log('// Prueba de validación de contraseñas');
+        cy.visit(`${baseUrl}/Identity/Account/Register`);
 
-    // Esta afirmación es suficiente para validar el inicio de sesión exitoso
-    // ya que la aplicación redirige al carrito solo si el login es correcto.
-    cy.url().should('eq', 'http://localhost:5012/Cart');
+        cy.get('#Input_Email').type(testEmail);
+        cy.get('#Input_Password').type(correctPassword);
+        cy.get('#Input_ConfirmPassword').type(wrongPassword);
 
-    // Eliminamos la línea siguiente que fallaba porque el elemento 'a#manage' no está en esta página.
-    // cy.get('a#manage').should('contain', `Hello ${newEmail}!`);
-  });
+        cy.get('button[type="submit"]').click();
 
+        // Verificación 1: Debe permanecer en la página de registro.
+        cy.url().should('eq', `${baseUrl}/Identity/Account/Register`); 
 
+        // Verificación 2: Busca el mensaje de error de validación del modelo.
+        cy.contains('The password and confirmation password do not match.').should('be.visible');
+    });
 
+    // ---------------------------------------------------------------------
+    // REQUISITO 2: Inicio de sesión con roles diferenciados (Cliente)
+    // ---------------------------------------------------------------------
+    it('3. Cliente: Debe iniciar sesión con el nuevo usuario y redirigir al carrito', () => {
+        cy.log('// Requisito: Inicio de sesión como Cliente');
+        cy.visit(`${baseUrl}/Identity/Account/Login`);
+        cy.get('#Input_Email').type(clientEmail);
+        cy.get('#Input_Password').type(password);
+        cy.get('button[type="submit"]').click();
 
-  it('3. Debe mostrar un error cuando las contraseñas no coinciden', () => {
-    // Generamos un email y una contraseña válidos, pero la confirmación será diferente
-    const testEmail = generateRandomEmail();
-    const correctPassword = 'Password123!';
-    const wrongPassword = 'Password-wrong!';
-
-    // Paso 1: Visita la página de registro
-    cy.visit('http://localhost:5012/Identity/Account/Register');
-
-    // Paso 2: Llena el formulario con contraseñas que no coinciden
-    cy.get('#Input_Email').type(testEmail);
-    cy.get('#Input_Password').type(correctPassword);
-    cy.get('#Input_ConfirmPassword').type(wrongPassword);
-
-    // Paso 3: Haz clic en el botón de registro
-    cy.get('button[type="submit"]').click();
-
-    // Verificación 1: Asegurarse de que la URL no cambie.
-    // Esto significa que la página no redirigió, lo que indica un fallo de validación.
-    cy.url().should('eq', 'http://localhost:5012/Identity/Account/Register');
-
-    // Verificación 2: Busca un mensaje de error
-    // Cypress buscará el mensaje en la página y verificará que esté visible.
-    cy.contains('The password and confirmation password do not match.').should('be.visible');
-  });
+        // Verificación de redirección: El informe indica que se redirige al carrito.
+        cy.url().should('eq', `${baseUrl}/Cart`); 
+    });
 });
-
-
-/*
-function generateRandomEmail() {
-  const randomString = Math.random().toString(36).substring(2, 8);
-  return `prueba_${randomString}@system.com`;
-}
-
-describe('Flujo de Autenticación de Usuarios (CON ERROR)', () => {
-
-  const newEmail = generateRandomEmail();
-  const password = 'TestPassword123@';
-
-  it('1. Debe registrar un nuevo usuario con éxito y redirigir a la página de inicio (FALLA)', () => {
-    cy.visit('http://localhost:5012/Identity/Account/Register');
-
-    // ERROR INTENCIONAL AQUÍ: El ID del input de email está mal.
-    cy.get('#Input_Email_Error').type(newEmail);
-
-    cy.get('#Input_Password').type(password);
-    cy.get('#Input_ConfirmPassword').type(password);
-    cy.get('button[type="submit"]').click();
-    cy.url().should('eq', 'http://localhost:5012/');
-  });
-
-  it('2. El segundo módulo no se ejecutará debido al error en el primer módulo.', () => {
-    // Este test no se ejecutará porque el anterior falló y Cypress se detuvo.
-    cy.log('Este test no correrá. El primer test tiene un error.');
-  });
-});
-
-*/
-// user_registration_validation.cy.js
-
-
-
-/*
-// Función para generar un correo electrónico único en cada prueba
-function generateRandomEmail() {
-  const randomString = Math.random().toString(36).substring(2, 8);
-  return `prueba_${randomString}@system.com`;
-}
-
-describe('Validación de Registro', () => {
-
-  it('Debe mostrar un error cuando las contraseñas no coinciden', () => {
-    // Generamos un email y una contraseña válidos, pero la confirmación será diferente
-    const testEmail = generateRandomEmail();
-    const correctPassword = 'Password123!';
-    const wrongPassword = 'Password-wrong!';
-
-    // Paso 1: Visita la página de registro
-    cy.visit('http://localhost:5012/Identity/Account/Register');
-
-    // Paso 2: Llena el formulario con contraseñas que no coinciden
-    cy.get('#Input_Email').type(testEmail);
-    cy.get('#Input_Password').type(correctPassword);
-    cy.get('#Input_ConfirmPassword').type(wrongPassword);
-
-    // Paso 3: Haz clic en el botón de registro
-    cy.get('button[type="submit"]').click();
-
-    // Verificación 1: Asegurarse de que la URL no cambie.
-    // Esto significa que la página no redirigió, lo que indica un fallo de validación.
-    cy.url().should('eq', 'http://localhost:5012/Identity/Account/Register');
-
-    // Verificación 2: Busca un mensaje de error
-    // Cypress buscará el mensaje en la página y verificará que esté visible.
-    cy.contains('The password and confirmation password do not match.').should('be.visible');
-  });
-});
-
-*/
