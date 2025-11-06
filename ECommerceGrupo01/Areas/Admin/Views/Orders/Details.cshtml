@@ -1,0 +1,97 @@
+@model ECommerce.Models.Order
+@using ECommerce.Models
+
+@{
+    ViewData["Title"] = "Detalle de Orden";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        <i class="bi bi-receipt"></i> Detalle de Orden #@Model.Id
+    </h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="card-title mb-3 text-primary">Información General</h4>
+
+            <dl class="row">
+                <dt class="col-sm-3">Cliente:</dt>
+                <dd class="col-sm-9">@Model.User?.Email ?? "Usuario eliminado"</dd>
+
+                <dt class="col-sm-3">Fecha de Creación:</dt>
+                <dd class="col-sm-9">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                <dt class="col-sm-3">Estado Actual:</dt>
+                <dd class="col-sm-9">
+                    @{
+                        var badgeClass = Model.Status switch
+                        {
+                            OrderStatus.Entregado => "bg-success",
+                            OrderStatus.EnTransito => "bg-primary",
+                            OrderStatus.EnPreparacion => "bg-warning text-dark",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass px-3 py-2">@Model.Status</span>
+                </dd>
+
+                <dt class="col-sm-3">Total del Pedido:</dt>
+                <dd class="col-sm-9 fw-bold text-success">
+                    @Model.Total.ToString("C", new System.Globalization.CultureInfo("es-PE"))
+                </dd>
+            </dl>
+
+            <a asp-action="UpdateStatus" asp-route-id="@Model.Id" class="btn btn-warning mt-2">
+                <i class="bi bi-pencil-square"></i> Actualizar Estado
+            </a>
+            <a asp-action="Index" class="btn btn-secondary mt-2">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title mb-3 text-primary">Productos en la Orden</h4>
+
+            @if (Model.Items == null || !Model.Items.Any())
+            {
+                <div class="alert alert-info">No hay productos asociados a esta orden.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio Unitario</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                       <tbody>
+    @foreach (var item in Model.Items)
+    {
+        <tr>
+            <td>@(item.Product?.Name ?? item.ProductName)</td>
+            <td>@item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE"))</td>
+            <td>@item.Quantity</td>
+            <td>
+                <strong>
+                    @((item.UnitPrice * item.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE")))
+                </strong>
+            </td>
+        </tr>
+    }
+</tbody>
+
+
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

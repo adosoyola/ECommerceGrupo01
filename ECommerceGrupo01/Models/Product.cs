@@ -1,38 +1,31 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Http;//nuevo
-
+using Microsoft.AspNetCore.Http;
 
 namespace ECommerce.Models
 {
-
-
     public class Product
     {
         public int Id { get; set; }
 
-        [Required, StringLength(150)]
-        public string Name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "El campo Nombre es obligatorio")]
+        public string Name { get; set; }
 
-        [DataType(DataType.Currency)]
+        [Required(ErrorMessage = "El campo Precio es obligatorio")]
         public decimal Price { get; set; }
 
+        [Required(ErrorMessage = "El campo Stock es obligatorio")]
         public int Stock { get; set; }
 
-        public string Description { get; set; } = string.Empty;
+        [Required(ErrorMessage = "La descripción es obligatoria")]
+        public string Description { get; set; }
 
-        //public string ImageUrl { get; set; }
+        // ⚠️ Quita el [Required] de ImagePath si la validación se hace desde el controlador
+        public string? ImagePath { get; set; }
 
-         public string? ImagePath { get; set; } // ruta de la imagen
-       
-       [NotMapped] // 👈 evita que EF intente mapearlo a la BD
+         [NotMapped]
+
+        [Display(Name = "Imagen del Producto")]
         public IFormFile? ImageFile { get; set; }
-
-
-        //Prueba
-        public bool EstaEnStock()
-        {
-            return Stock > 0;
-        }
     }
 }

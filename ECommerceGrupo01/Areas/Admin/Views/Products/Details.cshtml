@@ -1,0 +1,36 @@
+@model ECommerce.Models.Product
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Detalles del Producto";
+}
+
+<h2>ℹ️ Detalles del Producto</h2>
+
+<div class="card shadow-sm mt-3" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">@Model.Name</h5>
+    </div>
+    <div class="card-body">
+        <div class="text-center mb-3">
+            <img src="@(string.IsNullOrEmpty(Model.ImagePath) ? Url.Content("~/imagenes/no-image.png") : Model.ImagePath)"
+                 alt="@Model.Name"
+                 width="200"
+                 class="img-thumbnail" />
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-4">📝 Descripción:</dt>
+            <dd class="col-sm-8">@Model.Description</dd>
+
+            <dt class="col-sm-4">💲 Precio:</dt>
+            <dd class="col-sm-8">@string.Format(System.Globalization.CultureInfo.GetCultureInfo("es-PE"), "{0:C}", Model.Price)</dd>
+
+            <dt class="col-sm-4">📦 Stock:</dt>
+            <dd class="col-sm-8">@Model.Stock</dd>
+        </dl>
+    </div>
+    <div class="card-footer text-end">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">✏️ Editar</a>
+        <a asp-action="Index" class="btn btn-secondary">⬅️ Volver</a>
+    </div>
+</div>

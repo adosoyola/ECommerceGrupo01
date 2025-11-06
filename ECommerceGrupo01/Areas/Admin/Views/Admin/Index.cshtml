@@ -8,7 +8,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/Admin">⚙️ AdminPanel</a>
+        <a class="navbar-brand" href="/Admin">⚙️ Panel Admin</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
                 data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
                 aria-label="Toggle navigation">
@@ -25,6 +25,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/Admin/Users">👥 Usuarios</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Reports">📊 Reportes</a>
+                </li>
                 
             </ul>
         </div>
@@ -32,7 +35,7 @@
 </nav>
 
 <div class="container">
-    <h2 class="mb-4">📊 Panel de Administración</h2>
+    <h2 class="mb-4">🛠️ Panel de Administración</h2>
 
     <div class="row">
         <!-- Productos -->
@@ -64,6 +67,16 @@
                     <h3 class="card-title">👥 Usuarios</h3>
                     <p class="card-text fs-4"><strong>@ViewBag.UserCount</strong></p>
                     <a href="/Admin/Users" class="btn btn-warning text-white">Ver usuarios</a>
+                </div>
+            </div>
+        </div>
+
+         <!-- Reportes -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success mb-3">
+                <div class="card-body text-center">
+                    <h3 class="card-title">📊 Reportes</h3>
+                    <a href="/Admin/Reports" class="btn btn-success">Ver Reportes</a>
                 </div>
             </div>
         </div>

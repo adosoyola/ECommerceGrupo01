@@ -35,18 +35,37 @@ namespace ECommerce.Areas.Admin.Controllers
         }
 
         // POST: Admin/Products/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+      [HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(Product product)
+{
+    Console.WriteLine($"➡️ Nombre recibido: {product.Name}");
+    Console.WriteLine($"➡️ Precio recibido: {product.Price}");
+    Console.WriteLine($"➡️ Archivo recibido: {(product.ImageFile != null ? product.ImageFile.FileName : "Ninguno")}");
+
+    try
+    {
+        if (product.ImageFile != null && product.ImageFile.Length > 0)
         {
-            // 👇 Debug: imprime lo que realmente llega al backend
-    Console.WriteLine($"Name recibido: {product.Name}");
-    Console.WriteLine($"Price recibido: {product.Price}");
-    Console.WriteLine($"Imagen: {(product.ImageFile != null ? product.ImageFile.FileName : "sin archivo")}");
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
 
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
 
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(product.ImageFile.FileName);
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            // 👇 Imprime todos los errores de ModelState en la consola
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await product.ImageFile.CopyToAsync(stream);
+            }
+
+            product.ImagePath = "/images/" + uniqueFileName;
+        }
+
+        // 🔹 Validamos recién después de asignar la ruta de imagen
+        if (!ModelState.IsValid)
+        {
             foreach (var key in ModelState.Keys)
             {
                 var state = ModelState[key];
@@ -55,123 +74,177 @@ namespace ECommerce.Areas.Admin.Controllers
                     Console.WriteLine($"Error en {key}: {error.ErrorMessage}");
                 }
             }
+            return View(product);
+        }
 
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
 
+        Console.WriteLine("✅ Producto guardado correctamente");
+        return RedirectToAction(nameof(Index));
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error al guardar producto: {ex.Message}");
+        return View(product);
+    }
+}
+           
 
-            if (ModelState.IsValid)
+       // GET: Admin/Products/Edit/5
+[HttpGet]
+public async Task<IActionResult> Edit(int? id)
+{
+    if (id == null)
+    {
+        return NotFound();
+    }
+
+    var product = await _db.Products.FindAsync(id);
+    if (product == null)
+    {
+        return NotFound();
+    }
+
+    return View(product);
+}
+
+// POST: Admin/Products/Edit/5
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(int id, Product product)
+{
+    if (id != product.Id)
+    {
+        return NotFound();
+    }
+
+    if (ModelState.IsValid)
+    {
+        try
+        {
+            var existingProduct = await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+
+            if (existingProduct == null)
             {
-                // Si se subió una imagen
-                if (product.ImageFile != null && product.ImageFile.Length > 0)
+                return NotFound();
+            }
+
+            // ✅ Si se sube una nueva imagen
+            if (product.ImageFile != null && product.ImageFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Eliminar imagen anterior
+                if (!string.IsNullOrEmpty(existingProduct.ImagePath))
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "/images/");
-
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + product.ImageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, existingProduct.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldImagePath))
                     {
-                        await product.ImageFile.CopyToAsync(fileStream);
+                        System.IO.File.Delete(oldImagePath);
                     }
-
-                    product.ImagePath = "/images/" + uniqueFileName;
                 }
 
-                _db.Products.Add(product);
-                await _db.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(product.ImageFile.FileName);
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-
-            }
-
-
-               //  Console.WriteLine($"Producto recibido: {product.Name}, {product.Price}");
-
-            return View(product);
-        }
-
-        // GET: Admin/Products/Edit/5
-        public async Task<IActionResult> Edit(int id)
-        {
-            var product = await _db.Products.FindAsync(id);
-            if (product == null) return NotFound();
-
-            return View(product);
-        }
-
-        // POST: Admin/Products/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        
-                public async Task<IActionResult> Edit(int id, Product product, IFormFile ImageFile)
-        {
-
-            if (ModelState.IsValid)
-            {
-                try
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    if (ImageFile != null && ImageFile.Length > 0)
-                    {
-                        var fileName = Path.GetFileName(ImageFile.FileName);
-                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "/images/", fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await ImageFile.CopyToAsync(stream);
-                        }
-
-                        product.ImagePath = "/images/" + fileName;
-                    }
-
-
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_db.Products.Any(e => e.Id == product.Id))
-                        return NotFound();
-                    else
-                        throw;
+                    await product.ImageFile.CopyToAsync(stream);
                 }
 
-
-
-                _db.Products.Update(product);
-                await _db.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                product.ImagePath = "/images/" + uniqueFileName;
             }
-            return View(product);
-        }
-
-        // GET: Admin/Products/Delete/5
-        public async Task<IActionResult> Delete(int id)
-        {
-            var product = await _db.Products.FindAsync(id);
-            if (product == null) return NotFound();
-
-            return View(product);
-        }
-
-        // POST: Admin/Products/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var product = await _db.Products.FindAsync(id);
-            if (product != null)
+            else
             {
-                _db.Products.Remove(product);
-                await _db.SaveChangesAsync();
+                // Mantener la imagen anterior si no se reemplaza
+                product.ImagePath = existingProduct.ImagePath;
             }
+
+            _db.Update(product);
+            await _db.SaveChangesAsync();
+
+            Console.WriteLine($"✅ Producto actualizado: {product.Name}");
             return RedirectToAction(nameof(Index));
         }
-        
-        public IActionResult Details(int id)
+        catch (Exception ex)
         {
-            var product = _db.Products.Find(id);
-            if (product == null) return NotFound();
-            return View(product);
+            Console.WriteLine($"❌ Error al editar: {ex.Message}");
         }
+    }
+
+    return View(product);
+}
+
+       // GET: Admin/Products/Delete/5
+[HttpGet]
+public async Task<IActionResult> Delete(int? id)
+{
+    if (id == null)
+    {
+        return NotFound();
+    }
+
+    var product = await _db.Products
+        .FirstOrDefaultAsync(m => m.Id == id);
+
+    if (product == null)
+    {
+        return NotFound();
+    }
+
+    return View(product);
+}
+
+// POST: Admin/Products/Delete/5
+[HttpPost, ActionName("Delete")]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> DeleteConfirmed(int id)
+{
+    var product = await _db.Products.FindAsync(id);
+    if (product != null)
+    {
+        // 🔹 Eliminar imagen física si existe
+        if (!string.IsNullOrEmpty(product.ImagePath))
+        {
+            string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, product.ImagePath.TrimStart('/'));
+            if (System.IO.File.Exists(imagePath))
+            {
+                System.IO.File.Delete(imagePath);
+            }
+        }
+
+        // 🔹 Eliminar el producto de la base de datos
+        _db.Products.Remove(product);
+        await _db.SaveChangesAsync();
+
+        Console.WriteLine($"🗑️ Producto eliminado: {product.Name}");
+    }
+
+    return RedirectToAction(nameof(Index));
+}
+
+// GET: Admin/Products/Details/5
+[HttpGet]
+public async Task<IActionResult> Details(int? id)
+{
+    if (id == null)
+    {
+        return NotFound();
+    }
+
+    var product = await _db.Products
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (product == null)
+    {
+        return NotFound();
+    }
+
+    return View(product);
+}
     }
 }
