@@ -5,11 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ECommerce.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq; // Necesario para LINQ (Cast, Select)
 
 namespace ECommerce.Areas.Admin.Controllers
 {
+    // Usaremos "ADMIN" en mayúsculas. Recuerda que si 'Admin' te funcionó, 
+    // debes corregir Program.cs para usar 'Admin' y ser consistente.
     [Area("Admin")]
-    [Authorize(Roles = "Admin")] // Asegúrate de que el rol sea "ADMIN"
+    [Authorize(Roles = "Admin")]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,37 +37,27 @@ namespace ECommerce.Areas.Admin.Controllers
         }
 
         // GET: Admin/Orders/Details/5
+        // 🎯 ESTE ES EL MÉTODO QUE SOLUCIONA EL BOTÓN NO OPERATIVO
         public async Task<IActionResult> Details(int? id)
         {
+
             if (id == null) return NotFound();
 
             var order = await _context.Orders
             .Include(o => o.Items)
-            .ThenInclude(i => i.Product) // Detalle del producto por cada ítem
-            .Include(o => o.User)
+            .ThenInclude(i => i.Product) // Detalle del producto por cada ítem (para ver el nombre)
+            .Include(o => o.User)       // Incluye el usuario (para ver el email)
             .FirstOrDefaultAsync(m => m.Id == id);
 
             if (order == null) return NotFound();
 
-            return View(order);
-        }
-
-        // GET: Admin/Orders/UpdateStatus/5
-        // Formulario para actualizar el estado
-        public async Task<IActionResult> UpdateStatus(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
-
-            // Pasa todos los valores del enum para el select
+            // Pasa todos los valores del enum OrderStatus para el Dropdown en Details.cshtml
             var statuses = Enum.GetValues(typeof(OrderStatus))
                                    .Cast<OrderStatus>()
                                    .Select(e => new SelectListItem
                                    {
                                        Value = e.ToString(),
-                                       Text = e.ToString() // Opcional: Si usaste [Display], podrías usar un método de extensión aquí
+                                       Text = e.ToString()
                                    }).ToList();
 
             ViewBag.Statuses = statuses;
@@ -97,6 +90,5 @@ namespace ECommerce.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-
     }
 }

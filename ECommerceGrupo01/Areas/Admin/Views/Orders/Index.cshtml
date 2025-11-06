@@ -77,8 +77,8 @@ else
                             </span>
                         </td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-info"
-                                title="Ver Detalle y Actualizar Estado">
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id"
+                                class="btn btn-sm btn-info" title="Ver Detalle y Actualizar Estado">
                                 <i class="bi bi-eye"></i> Detalle
                             </a>
                         </td>
