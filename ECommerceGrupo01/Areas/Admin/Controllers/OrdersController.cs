@@ -90,5 +90,27 @@ namespace ECommerce.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        // GET: Admin/Orders/ExportToPdf/5
+        [HttpGet]
+        public async Task<IActionResult> ExportToPdf(int id)
+        {
+            // Buscamos la orden por ID (sin check de usuario, porque somos Admin)
+            var order = await _context.Orders
+                .Where(o => o.Id == id)
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product) // Incluye Productos (para nombre)
+                .Include(o => o.User)       // Incluye Usuario (para email)
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Pedido no encontrado.";
+                return RedirectToAction("Index");
+            }
+
+            // 🔑 Reutilizamos la vista pública de la factura.
+            // Le decimos a Razor que la busque fuera del área "Admin".
+            return View("~/Views/Checkout/InvoicePdf.cshtml", order);
+        }
     }
 }

@@ -25,25 +25,25 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
-            
+
 
             // Log: qué había antes
-    var before = HttpContext.Session.GetString("CartSession"); // <-- usa tu key real aquí
-    _logger.LogInformation("Cart before logout: {Cart}", before ?? "<null>");
+            var before = HttpContext.Session.GetString("CartSession"); // <-- usa tu key real aquí
+            _logger.LogInformation("Cart before logout: {Cart}", before ?? "<null>");
 
-    await _signInManager.SignOutAsync();
+            await _signInManager.SignOutAsync();
 
-    // Elimina la clave exacta que usas para guardar el carrito
-    HttpContext.Session.Remove("CartSession"); // <-- o la key real
-    // o para borrar todo:
-    HttpContext.Session.Clear();
+            // Elimina la clave exacta que usas para guardar el carrito
+            HttpContext.Session.Remove("CartSession"); // <-- o la key real
+                                                       // o para borrar todo:
+            HttpContext.Session.Clear();
 
-    var after = HttpContext.Session.GetString("CartSession");
-    _logger.LogInformation("Cart after logout: {Cart}", after ?? "<null>");
+            var after = HttpContext.Session.GetString("CartSession");
+            _logger.LogInformation("Cart after logout: {Cart}", after ?? "<null>");
 
-    
+
             _logger.LogInformation("User logged out.");
-           
+
 
             if (returnUrl != null)
             {
@@ -51,9 +51,9 @@ namespace ECommerce.Areas.Identity.Pages.Account
             }
             else
             {
-                // This needs to be a redirect so that the browser performs a new
-                // request and the identity for the user gets updated.
-                return RedirectToPage();
+                // Si no hay returnUrl, forzamos la redirección a la 
+                // página principal (Home).
+                return LocalRedirect(Url.Content("~/"));
             }
         }
     }
