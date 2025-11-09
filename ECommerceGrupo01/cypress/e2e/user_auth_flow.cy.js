@@ -5,7 +5,7 @@
 function generateRandomEmail() {
     const randomString = Math.random().toString(36).substring(2, 8);
     // Usamos el dominio 'system.com' para simular correos de prueba
-    return `prueba_user_${randomString}@system.com`; 
+    return `prueba_user_${randomString}@system.com`;
 }
 
 describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
@@ -14,7 +14,7 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
     // Generamos un correo de cliente que usaremos en las pruebas 1 y 3
     const clientEmail = generateRandomEmail();
     const password = 'Test@123'; // Contraseña que cumple requisitos
-    
+
     // ---------------------------------------------------------------------
     // REQUISITO 1: Registro de clientes con validación de correo electrónico.
     // ---------------------------------------------------------------------
@@ -25,9 +25,9 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
         cy.get('#Input_Password').type(password);
         cy.get('#Input_ConfirmPassword').type(password);
         cy.get('button[type="submit"]').click();
-        
+
         // Verificación de redirección al Home/Catálogo tras un registro exitoso.
-        cy.url().should('eq', `${baseUrl}/`); 
+        cy.url().should('eq', `${baseUrl}/`);
     });
 
     it('2. Cliente: Debe mostrar un error cuando las contraseñas no coinciden', () => {
@@ -46,7 +46,7 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
         cy.get('button[type="submit"]').click();
 
         // Verificación 1: Debe permanecer en la página de registro.
-        cy.url().should('eq', `${baseUrl}/Identity/Account/Register`); 
+        cy.url().should('eq', `${baseUrl}/Identity/Account/Register`);
 
         // Verificación 2: Busca el mensaje de error de validación del modelo.
         cy.contains('The password and confirmation password do not match.').should('be.visible');
@@ -63,6 +63,6 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
         cy.get('button[type="submit"]').click();
 
         // Verificación de redirección: El informe indica que se redirige al carrito.
-        cy.url().should('eq', `${baseUrl}/Cart`); 
+        cy.url().should('eq', `${baseUrl}/Cart`);
     });
 });

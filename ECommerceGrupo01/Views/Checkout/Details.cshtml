@@ -1,0 +1,77 @@
+@model ECommerce.Models.Order
+@using System.Globalization
+@using ECommerce.Models
+
+@{
+    ViewData["Title"] = $"Detalle del Pedido #{Model.Id}";
+    var culture = new CultureInfo("es-PE");
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Detalle del Pedido #@Model.Id</h1>
+        <a asp-action="History" class="btn btn-secondary">⬅ Volver al Historial</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            Información del Pedido
+        </div>
+        <div class="card-body row">
+            <div class="col-md-6">
+                <p><strong>Fecha de Pedido:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                <p><strong>Total Pagado:</strong> <span class="fw-bold text-success">@Model.Total.ToString("C",
+                                                culture)</span></p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                @{
+                    var badgeClass = Model.Status switch
+                    {
+                        OrderStatus.Entregado => "bg-success",
+                        OrderStatus.EnTransito => "bg-primary",
+                        OrderStatus.EnPreparacion => "bg-warning text-dark",
+                        OrderStatus.Cancelado => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                }
+                <p><strong>Estado:</strong> <span class="badge @badgeClass fs-6">@Model.Status.ToString()</span></p>
+
+                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank"
+                    class="btn btn-sm btn-danger d-block d-md-inline-block" title="Exportar factura como PDF">
+                    <i class="bi bi-file-earmark-pdf"></i> Exportar Factura
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <h2>Productos Comprados</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-primary">
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@(item.Product?.Name ?? item.ProductName)</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("C", culture)</td>
+                        <td>@((item.Quantity * item.UnitPrice).ToString("C", culture))</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold table-light">
+                    <td colspan="3" class="text-end">Total General:</td>
+                    <td>@Model.Total.ToString("C", culture)</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

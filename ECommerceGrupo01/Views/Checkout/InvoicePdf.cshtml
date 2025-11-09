@@ -1,0 +1,257 @@
+@model ECommerce.Models.Order
+@using System.Globalization
+@using ECommerce.Models
+
+@{
+    Layout = null;
+    ViewData["Title"] = $"Factura #{Model.Id}";
+    var culture = new CultureInfo("es-PE");
+
+    var statusClass = Model.Status switch
+    {
+        OrderStatus.Entregado => "text-success",
+        OrderStatus.EnTransito => "text-primary",
+        OrderStatus.EnPreparacion => "text-warning",
+        OrderStatus.Cancelado => "text-danger",
+        _ => "text-secondary"
+    };
+}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            margin: 30px;
+            background-color: #f8f9fa;
+            /* Color de fondo para que se vea la factura */
+        }
+
+        /* * 1. ESTILOS PARA EL CONTENIDO Y EL BOTÓN DE DESCARGA
+        */
+        #invoice-content {
+            background-color: #ffffff;
+            padding: 25px;
+            margin: 0 auto;
+            max-width: 800px;
+            /* Ancho de la factura */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* Sombra suave */
+        }
+
+        .download-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        /* Oculta el botón y la sombra al imprimir */
+        /* 🔑 CORRECCIÓN 1: Se usa @@media print */
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                margin: 0;
+                background-color: #ffffff;
+            }
+
+            #invoice-content {
+                box-shadow: none;
+                margin: 0;
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+
+        /* (Fin de estilos nuevos) */
+
+
+        .header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+        }
+
+        .details,
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .details td {
+            padding: 6px;
+            vertical-align: top;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .items-table th {
+            background-color: #f2f2f2;
+        }
+
+        .items-table tfoot .total-row {
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .total-row {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .text-success {
+            color: #198754;
+        }
+
+        .text-primary {
+            color: #0d6efd;
+        }
+
+        .text-warning {
+            color: #ffc107;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+
+        .text-secondary {
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button id="download-pdf-btn" class="download-button no-print">
+        <i class="bi bi-download"></i> Descargar PDF
+    </button>
+
+    <div id="invoice-content">
+
+        <div class="header">
+            <h1>SYSTEMCUSCO</h1>
+            <p>Comprobante de Pedido</p>
+        </div>
+
+        <h2>Información del Pedido</h2>
+        <table class="details">
+            <tr>
+                <td style="width: 50%;"><strong>Pedido ID:</strong> #@Model.Id</td>
+                <td style="width: 50%;"><strong>Fecha de Pedido:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Email Cliente:</strong> @Model.User.Email</td>
+                <td><strong>Total Pagado:</strong> <span class="total-row">@Model.Total.ToString("C", culture)</span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Estado del Pedido:</strong> <span
+                        class="status-text @statusClass">@Model.Status.ToString()</span></td>
+            </tr>
+        </table>
+
+        <h2>Productos Adquiridos</h2>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Producto</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@(item.Product?.Name ?? item.ProductName)</td>
+                        <td>@item.UnitPrice.ToString("C", culture)</td>
+                        <td>@item.Quantity</td>
+                        <td>@((item.Quantity * item.UnitPrice).ToString("C", culture))</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3" style="text-align: right;">TOTAL:</td>
+                    <td>@Model.Total.ToString("C", culture)</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <p style="margin-top: 40px; text-align: center; font-size: 8pt;">
+            Gracias por su compra. Este documento sirve como comprobante de pedido.
+        </p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // Espera a que la ventana cargue
+        window.onload = function () {
+            // Asigna el evento al botón
+            document.getElementById('download-pdf-btn').addEventListener('click', function () {
+
+                const button = this;
+                const invoice = document.getElementById('invoice-content');
+                const { jsPDF } = window.jspdf; // Obtiene jsPDF desde el objeto window
+
+                // Oculta el botón para que no salga en la "foto"
+                button.style.display = 'none';
+
+                // Usa html2canvas para "tomar la foto" del div #invoice-content
+                html2canvas(invoice, {
+                    scale: 2 // Aumenta la escala para mejor calidad de imagen
+                }).then(canvas => {
+                    // Convierte el canvas (la foto) a una imagen de datos
+                    const imgData = canvas.toDataURL('image/png');
+
+                    // Crea un nuevo documento PDF en orientación 'portrait' (vertical)
+                    // en milímetros (mm) y tamaño 'a4'
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+
+                    // Calcula las dimensiones para que la imagen quepa en el PDF
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                    // Añade la imagen al PDF
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+                    /* 🔑 CORRECCIÓN 2: Se usa @(Model.Id) */
+                    pdf.save('Factura-@(Model.Id).pdf');
+
+                    // Vuelve a mostrar el botón
+                    button.style.display = 'block';
+                });
+            });
+        };
+    </script>
+
+</body>
+
+</html>
