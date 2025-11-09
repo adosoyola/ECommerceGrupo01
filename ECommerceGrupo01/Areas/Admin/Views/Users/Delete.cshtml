@@ -1,0 +1,33 @@
+@model Microsoft.AspNetCore.Identity.IdentityUser
+
+@{
+    ViewData["Title"] = "Confirmar Eliminación";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2 class="text-danger mb-3"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación</h2>
+
+<div class="alert alert-danger">
+    <h4 class="alert-heading">¡Advertencia!</h4>
+    <p>Estás a punto de eliminar permanentemente al usuario:</p>
+    <hr>
+    <p class="mb-0 fw-bold fs-5">@Model.Email</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p>Esta acción no se puede deshacer.</p>
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="d-flex justify-content-start">
+                <button type="submit" class="btn btn-danger me-2">
+                    <i class="bi bi-trash-fill"></i> Sí, Eliminar Usuario
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
