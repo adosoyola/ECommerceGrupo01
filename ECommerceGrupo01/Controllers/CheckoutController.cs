@@ -26,7 +26,8 @@ public class CheckoutController : Controller
         var json = HttpContext.Session.GetString(SessionKey);
         return string.IsNullOrEmpty(json)
             ? new List<CartItem>()
-            : JsonConvert.DeserializeObject<List<CartItem>>(json);
+            // Corrección Warning CS8603: Añadir ?? new List<CartItem>()
+            : JsonConvert.DeserializeObject<List<CartItem>>(json) ?? new List<CartItem>();
     }
 
     private void SaveCart(List<CartItem> cart)
@@ -41,85 +42,114 @@ public class CheckoutController : Controller
     {
         try
         {
-            var cart = GetCart();
-            if (cart == null || !cart.Any())
-            {
-                TempData["Error"] = "El carrito está vacío.";
-                return RedirectToAction("Index", "Cart");
-            }
-
             var userId = _userManager.GetUserId(User);
             if (userId == null)
             {
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                TempData["Error"] = "Usuario no encontrado.";
+                return View("PaymentSimulation", GetCart());
             }
 
-            System.Console.WriteLine("=== INICIANDO PAGO SIMULADO ===");
+            var user = await _userManager.FindByIdAsync(userId);
+            var cart = GetCart();
 
-            // Validar stock antes de procesar
+            if (cart == null || !cart.Any())
+            {
+                TempData["Error"] = "El carrito está vacío.";
+                return View("PaymentSimulation", GetCart());
+            }
+
+            // =================================================================
+            // 🔑 INICIO DE LA CORRECCIÓN
+            // =================================================================
+
+            // 1. Simulación de Pago (usando el servicio)
+
+            // Tu PaymentProcessor espera un "saldo disponible".
+            // Vamos a simular un saldo alto (ej: 10,000) para que la compra pase.
+            decimal saldoDisponibleSimulado = 10000.00m;
+
+            // Corrección 1: Llamamos al método correcto (ProcessPayment)
+            // y le pasamos los argumentos que espera (monto y saldo simulado).
+            // También quitamos el 'await' porque el método no es asíncrono.
+            var paymentResult = _paymentProcessor.ProcessPayment(model.Amount, saldoDisponibleSimulado);
+
+            // Corrección 2: Usamos 'IsSuccess' (como está en PaymentResult.cs)
+            if (!paymentResult.IsSuccess)
+            {
+                // Corrección 3: Usamos 'Message' (como está en PaymentResult.cs)
+                TempData["Error"] = $"Error de pago: {paymentResult.Message}";
+                return View("PaymentSimulation", GetCart());
+            }
+
+            // =================================================================
+            // 🔑 FIN DE LA CORRECCIÓN
+            // =================================================================
+
+            // 2. Lógica de Stock (la movimos aquí)
+            var errors = new List<string>();
             foreach (var item in cart)
             {
                 var product = await _db.Products.FindAsync(item.ProductId);
-                if (product == null || product.Stock < item.Quantity)
+                if (product == null)
                 {
-                    TempData["Error"] = $"Stock insuficiente para {item.Name}.";
-                    return RedirectToAction("Index", "Cart");
+                    errors.Add($"El producto '{item.Name}' ya no está disponible.");
+                }
+                else if (product.Stock < item.Quantity)
+                {
+                    errors.Add($"Stock insuficiente para '{item.Name}'. Disponible: {product.Stock}.");
                 }
             }
 
-            var total = cart.Sum(x => x.UnitPrice * x.Quantity);
+            if (errors.Any())
+            {
+                TempData["Error"] = string.Join("\n", errors);
+                // NOTA: No revertimos el pago porque es una simulación,
+                // pero en un caso real, aquí se llamaría a _paymentProcessor.RevertPaymentAsync(paymentResult.TransactionId);
+                return View("PaymentSimulation", GetCart());
+            }
 
-            // CREAR ORDER SIN PaymentMethod (para evitar el error)
+            // 3. Crear la Orden (si todo está OK)
             var order = new Order
             {
                 UserId = userId,
-                Total = total,
-                CreatedAt = DateTime.Now
-                // NO incluir PaymentMethod - se elimina temporalmente
+                Total = model.Amount,
+                Status = OrderStatus.EnPreparacion, // O usa OrderStatus.Pendiente si lo prefieres
+                Items = cart.Select(ci => new OrderItem
+                {
+                    ProductId = ci.ProductId,
+                    ProductName = ci.Name, // Guardar el nombre por si el producto se borra
+                    Quantity = ci.Quantity,
+                    UnitPrice = ci.UnitPrice
+                }).ToList()
             };
 
-            _db.Orders.Add(order);
-            await _db.SaveChangesAsync(); // Guardar orden primero
-
-            System.Console.WriteLine($"Orden creada ID: {order.Id}");
-
-            // CREAR ORDERITEMS y descontar stock
+            // 4. Actualizar Stock
             foreach (var item in cart)
             {
                 var product = await _db.Products.FindAsync(item.ProductId);
                 if (product != null)
                 {
-                    // Descontar stock
                     product.Stock -= item.Quantity;
-                    System.Console.WriteLine($"Stock actualizado: {product.Name} -> {product.Stock}");
-
-                    var orderItem = new OrderItem
-                    {
-                        OrderId = order.Id,
-                        ProductId = item.ProductId,
-                        ProductName = item.Name,
-                        UnitPrice = item.UnitPrice,
-                        Quantity = item.Quantity
-                    };
-
-                    _db.OrderItems.Add(orderItem);
                 }
             }
 
-            await _db.SaveChangesAsync(); // Guardar items y stock
+            _db.Orders.Add(order);
+            await _db.SaveChangesAsync();
 
-            // VACIAR CARRITO
+            // 5. Limpiar Carrito
             SaveCart(new List<CartItem>());
 
-            System.Console.WriteLine("=== PAGO SIMULADO EXITOSO ===");
-            TempData["Success"] = $"¡Pago simulado exitoso! Orden #: {order.Id}";
-            return RedirectToAction("Success", "Payments");
+            // 6. Redirigir a "Success"
+            TempData["SuccessMessage"] = $"¡Pedido #{order.Id} realizado con éxito!";
+            // Corrección: El nombre de tu vista de éxito es 'Success.cshtml'
+            // El controlador usa 'Success()'
+            return RedirectToAction("Success");
         }
         catch (Exception ex)
         {
-            System.Console.WriteLine($"=== ERROR: {ex.Message}");
-            TempData["Error"] = "Error en el proceso. Intente nuevamente.";
-            return RedirectToAction("PaymentSimulation");
+            // Log real (ej: _logger.LogError(ex, "Error en ProcessPaymentSimulation"))
+            TempData["Error"] = "Ocurrió un error inesperado al procesar el pago.";
+            return View("PaymentSimulation", GetCart());
         }
     }
 
@@ -170,11 +200,74 @@ public class CheckoutController : Controller
 
         var orders = await _db.Orders
             .Where(o => o.UserId == userId)
-            .Include(o => o.Items)
-            .ThenInclude(i => i.Product)
-            .OrderByDescending(o => o.CreatedAt)
+            .OrderByDescending(o => o.CreatedAt) // Ordenar por fecha
             .ToListAsync();
 
         return View(orders);
+    }
+
+    // ========================================================
+    // 🔑 MÉTODO NUEVO 1: DETAILS
+    // ========================================================
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account", new { area = "Identity" });
+        }
+
+        // Buscamos la orden, asegurándonos que sea del usuario
+        // e incluimos los "Items" y los "Products" de esos items.
+        var order = await _db.Orders
+            .Where(o => o.Id == id && o.UserId == userId)
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product) // Necesario para item.Product.Name
+            .FirstOrDefaultAsync();
+
+        if (order == null)
+        {
+            // No se encontró la orden o no pertenece al usuario
+            TempData["Error"] = "Pedido no encontrado.";
+            return RedirectToAction("History");
+        }
+
+        // Enviamos el pedido a la vista "Details.cshtml"
+        return View(order);
+    }
+
+    // ========================================================
+    // 🔑 MÉTODO NUEVO 2: EXPORTTOPDF
+    // ========================================================
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> ExportToPdf(int id)
+    {
+        var userId = _userManager.GetUserId(User);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account", new { area = "Identity" });
+        }
+
+        // Buscamos la orden, incluyendo Items, Productos y el Usuario (para el email)
+        var order = await _db.Orders
+            .Where(o => o.Id == id && o.UserId == userId)
+            .Include(o => o.Items)
+            .ThenInclude(i => i.Product)
+            .Include(o => o.User) // 🔑 ¡IMPORTANTE! Para que Model.User.Email funcione
+            .FirstOrDefaultAsync();
+
+        if (order == null)
+        {
+            TempData["Error"] = "Pedido no encontrado.";
+            return RedirectToAction("History");
+        }
+
+        // Enviamos el pedido a la vista "InvoicePdf.cshtml"
+        // Esta vista se mostrará en una pestaña nueva (por el target="_blank")
+        // y el usuario podrá imprimirla a PDF desde su navegador.
+        return View("InvoicePdf", order);
     }
 }

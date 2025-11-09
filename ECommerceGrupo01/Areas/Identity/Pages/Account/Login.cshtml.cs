@@ -103,16 +103,20 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            
-            //returnUrl ??= Url.Content("~/");
 
-            // 👇 Si no viene returnUrl o apunta a un POST (como /Payments/CreateCheckoutSession), lo mandamos al carrito
-             if (string.IsNullOrEmpty(returnUrl) || returnUrl.Contains("Payments/CreateCheckoutSession"))
-                {
-                    returnUrl = Url.Action("Index", "Cart", new { area = "" }); // 👈 fuera del área Identity
+            // 1. Si returnUrl es null/empty, lo forzamos a ser la raíz ("~/").
+            if (string.IsNullOrEmpty(returnUrl))
+            {
+                returnUrl = Url.Content("~/"); // Asigna la raíz (/) como valor predeterminado
+            }
 
-                }
-                
+            // 2. Si el returnUrl contiene la acción de pago, lo forzamos al carrito (para revisión).
+            // NOTA: Mantenemos este bloque después, ya que queremos que sobreescriba la URL solo en este caso específico.
+            if (returnUrl.Contains("Payments/CreateCheckoutSession"))
+            {
+                returnUrl = Url.Action("Index", "Cart", new { area = "" });
+            }
+
 
 
 
