@@ -4,6 +4,8 @@ using ECommerce.Data;
 using ECommerce.Services; // <- EmailSender dummy
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Stripe;
+using DinkToPdf;
+using DinkToPdf.Contracts;
 
 
 
@@ -32,6 +34,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));//agregado
 builder.Services.AddRazorPages(); // necesario para Identity
 //pago PaymentProcessor
 builder.Services.AddScoped<PaymentProcessor>();
