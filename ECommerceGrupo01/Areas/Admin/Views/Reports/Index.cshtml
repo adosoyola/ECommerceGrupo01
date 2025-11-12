@@ -31,7 +31,13 @@
     </div>
 </nav>
 
-
+<form method="get" asp-action="ExportarPDF" class="mb-3">
+    <input type="hidden" name="fechaInicio" value="@ViewBag.FechaInicio" />
+    <input type="hidden" name="fechaFin" value="@ViewBag.FechaFin" />
+    <button type="submit" class="btn btn-danger">
+        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+    </button>
+</form>
 <!-- FILTRO DE FECHAS -->
 <form method="get" class="row g-3 mb-4">
     <div class="col-md-4">
