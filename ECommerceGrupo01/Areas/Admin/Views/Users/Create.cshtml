@@ -5,33 +5,53 @@
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h2 class="mb-4"><i class="bi bi-plus-circle-fill"></i> Crear Nuevo Usuario</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-plus-fill"></i> Crear Usuario</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div class="row">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form asp-action="Create" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Email" class="form-control" placeholder="nombre@ejemplo.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
-                        <input asp-for="Email" class="form-control" placeholder="ejemplo@dominio.com" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
-                    </div>
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                <input asp-for="Password" type="password" class="form-control" id="passwordInput"
+                                    placeholder="Contraseña segura" />
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" class="form-control" type="password" />
-                        <span asp-validation-for="Password" class="text-danger"></span>
-                    </div>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword"
+                                    title="Mostrar contraseña">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <div class="form-text text-muted">La contraseña debe tener al menos una mayúscula, un número
+                                y un carácter especial.</div>
+                        </div>
 
-                    <div class="mt-4 d-flex justify-content-between">
-                        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancelar</a>
-                        <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Guardar
-                            Usuario</button>
-                    </div>
-                </form>
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Guardar Usuario
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver a la lista
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -41,4 +61,26 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        $(document).ready(function () {
+            $('#togglePassword').click(function () {
+                // Seleccionamos el input y el icono dentro del botón
+                const input = $('#passwordInput');
+                const icon = $(this).find('i');
+
+                if (input.attr('type') === 'password') {
+                    // Cambiar a texto visible
+                    input.attr('type', 'text');
+                    // Cambiar icono a ojo abierto
+                    icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                } else {
+                    // Volver a ocultar
+                    input.attr('type', 'password');
+                    // Cambiar icono a ojo tachado
+                    icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                }
+            });
+        });
+    </script>
 }
