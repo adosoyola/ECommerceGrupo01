@@ -12,21 +12,35 @@
             <h2>Create a new account.</h2>
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label asp-for="Input.Email">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
+            
+                <div class="mb-3">
+        <label asp-for="Input.Password" class="form-label">Password</label>
+        <div class="input-group password-container"> 
+            <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" id="passwordInput" />
+            
+            <button class="btn btn-outline-secondary password-toggle" type="button" id="togglePassword" title="Mostrar contraseña">
+                <i class="bi bi-eye-slash" aria-hidden="true"></i> 
+            </button>
+        </div>
+        <span asp-validation-for="Input.Password" class="text-danger"></span>
+    </div>
+            <div class="mb-3">
+    <label asp-for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+    <div class="input-group password-container">
+        <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" id="confirmPasswordInput" />
+
+        <button class="btn btn-outline-secondary password-toggle" type="button" id="toggleConfirmPassword" title="Mostrar contraseña">
+            <i class="bi bi-eye-slash" aria-hidden="true"></i>
+        </button>
+    </div>
+    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+</div>
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
     </div>
@@ -64,4 +78,36 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-}
+
+    <script>
+        // Función general para alternar el tipo de input y el icono
+        function togglePasswordVisibility(buttonId, inputId) {
+            // Seleccionar el campo de input y el icono
+            const input = $(`#${inputId}`);
+            const icon = $(`#${buttonId}`).find('i');
+
+            if (input.attr('type') === 'password') {
+                // Si es password, cambiar a text y cambiar a icono de ojo abierto
+                input.attr('type', 'text');
+                icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            } else {
+                // Si es text, cambiar a password y cambiar a icono de ojo cerrado
+                input.attr('type', 'password');
+                icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            }
+        }
+
+        $(document).ready(function () {
+            // 1. Enlace para el campo de Contraseña
+            $('#togglePassword').click(function () {
+                togglePasswordVisibility('togglePassword', 'passwordInput');
+            });
+
+            // 2. Enlace para el campo de Confirmar Contraseña
+            // (Asegúrate de que el ID del input sea 'confirmPasswordInput' y el botón 'toggleConfirmPassword' en el HTML)
+            $('#toggleConfirmPassword').click(function () {
+                togglePasswordVisibility('toggleConfirmPassword', 'confirmPasswordInput');
+            });
+        });
+    </script>
+    }

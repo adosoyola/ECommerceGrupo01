@@ -46,3 +46,8 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+/* ========================================================== */
+/* ESTILOS AÑADIDOS para el botón de alternar contraseña (Ojo) */
+/* (Las reglas de posicionamiento se han ELIMINADO para usar input-group en el HTML) */
+/* ========================================================== */
