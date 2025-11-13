@@ -64,24 +64,26 @@ namespace ECommerce.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            [Required(ErrorMessage = "El campo Correo Electrónico es obligatorio.")]
+            [EmailAddress(ErrorMessage = "El campo Correo Electrónico no es una dirección válida.")]
+            [Display(Name = "Correo Electrónico")]
+            public string Email { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [DataType(DataType.Password)]
-            public string Password { get; set; }
+            [Required(ErrorMessage = "El campo Contraseña es obligatorio.")]
+            [DataType(DataType.Password)]
+            [Display(Name = "Contraseña")]
+            public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Display(Name = "Remember me?")]
-            public bool RememberMe { get; set; }
+            [Display(Name = "¿Recordarme?")]
+            public bool RememberMe { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)
@@ -143,10 +145,10 @@ namespace ECommerce.Areas.Identity.Pages.Account
                     return RedirectToPage("./Lockout");
                 }
                 else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+                {
+                    ModelState.AddModelError(string.Empty, "Intento de inicio de sesión no válido.");
+                    return Page();
+                }
             }
 
             // If we got this far, something failed, redisplay form
