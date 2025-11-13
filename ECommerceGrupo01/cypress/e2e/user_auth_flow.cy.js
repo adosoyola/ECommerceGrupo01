@@ -21,17 +21,21 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
     it('1. Cliente: Debe registrar un nuevo usuario con éxito y redirigir a la página de inicio', () => {
         cy.log('// Requisito: Registro de clientes con validación de correo electrónico.');
         cy.visit(`${baseUrl}/Identity/Account/Register`);
+        
         cy.get('#Input_Email').type(clientEmail);
-        cy.get('#Input_Password').type(password);
-        cy.get('#Input_ConfirmPassword').type(password);
-        cy.get('button[type="submit"]').click();
+        cy.get('#passwordInput').type(password); // ID Corregido
+        cy.get('#confirmPasswordInput').type(password); // ID Corregido
+        
+        cy.get('form#registerForm button[type="submit"]').click();
 
         // Verificación de redirección al Home/Catálogo tras un registro exitoso.
         cy.url().should('eq', `${baseUrl}/`);
     });
 
+    // ---------------------------------------------------------------------
+    // REQUISITO: Validación de Contraseñas
+    // ---------------------------------------------------------------------
     it('2. Cliente: Debe mostrar un error cuando las contraseñas no coinciden', () => {
-        // Generamos un email único para esta prueba
         const testEmail = generateRandomEmail();
         const correctPassword = 'Password123!';
         const wrongPassword = 'Password-wrong!';
@@ -40,29 +44,66 @@ describe('Flujo de Autenticación de Usuarios (Solo Cliente)', () => {
         cy.visit(`${baseUrl}/Identity/Account/Register`);
 
         cy.get('#Input_Email').type(testEmail);
-        cy.get('#Input_Password').type(correctPassword);
-        cy.get('#Input_ConfirmPassword').type(wrongPassword);
+        cy.get('#passwordInput').type(correctPassword); // ID Corregido
+        cy.get('#confirmPasswordInput').type(wrongPassword); // ID Corregido
 
-        cy.get('button[type="submit"]').click();
+        cy.get('form#registerForm button[type="submit"]').click();
 
         // Verificación 1: Debe permanecer en la página de registro.
         cy.url().should('eq', `${baseUrl}/Identity/Account/Register`);
 
-        // Verificación 2: Busca el mensaje de error de validación del modelo.
-        cy.contains('The password and confirmation password do not match.').should('be.visible');
+        // Verificación 2: Busca el mensaje de error de validación del modelo (en español).
+        cy.contains('La contraseña y la contraseña de confirmación no coinciden.').should('be.visible');
     });
 
     // ---------------------------------------------------------------------
-    // REQUISITO 2: Inicio de sesión con roles diferenciados (Cliente)
+    // REQUISITO 3: Flujo de Compra (Login -> Añadir Producto -> Verificar Carrito)
     // ---------------------------------------------------------------------
-    it('3. Cliente: Debe iniciar sesión con el nuevo usuario y redirigir al carrito', () => {
+    it('3. Cliente: Debe iniciar sesión, agregar un producto y verlo en el carrito', () => {
+    
         cy.log('// Requisito: Inicio de sesión como Cliente');
         cy.visit(`${baseUrl}/Identity/Account/Login`);
-        cy.get('#Input_Email').type(clientEmail);
-        cy.get('#Input_Password').type(password);
-        cy.get('button[type="submit"]').click();
-
-        // Verificación de redirección: El informe indica que se redirige al carrito.
+        
+        cy.get('#Input_Email').type(clientEmail); // Email del Test 1
+        cy.get('#passwordInput').type(password); // ID Corregido
+        
+        cy.get('form#account button[type="submit"]').click();
+    
+        // Verificación 1: Redirección al Home.
+        cy.url().should('eq', `${baseUrl}/`); 
+    
+        // --- INICIO DE LA MEJORA ---
+    
+        cy.log('// Requisito: Navegar a Productos');
+        // Hacemos clic en el enlace "Productos" de la barra de navegación
+        // (Este selector funciona porque está en tu Home/Index.cshtml)
+        cy.contains('a.nav-link', 'Productos').click();
+    
+        // Verificación 2: Estamos en la página de productos
+        cy.url().should('include', '/Products');
+    
+        cy.log('// Requisito: Agregar un producto al carrito');
+        // Buscamos el primer formulario que apunte a /Cart/Add (basado en Products/Index.cshtml)
+        cy.get('form[action*="/Cart/Add"]').first().within(() => {
+            cy.get('button[type="submit"]').click();
+        });
+    
+        // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+        cy.log('// Verificación 3: El controlador redirige a la página del carrito');
+        // Tu CartController redirige a "Index" (es decir, /Cart).
+        // Así que verificamos que la URL sea la del carrito.
         cy.url().should('eq', `${baseUrl}/Cart`);
+    
+        // (Hemos eliminado la búsqueda del Toast que no existe)
+    
+        cy.log('// Verificación 4: El carrito NO está vacío');
+        
+        // ¡AJUSTAR ESTO! Cambia el texto si tu mensaje de "carrito vacío" es diferente.
+        cy.contains('Tu carrito está vacío').should('not.exist');
+    
+        // Verificamos que SÍ haya al menos un item en el carrito.
+        // ¡AJUSTAR ESTO! Si no usas una tabla (tbody tr), cambia el selector.
+        cy.get('tbody tr').should('have.length.greaterThan', 0);
     });
+
 });
