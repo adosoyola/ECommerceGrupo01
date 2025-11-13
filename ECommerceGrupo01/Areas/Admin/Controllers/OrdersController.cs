@@ -12,7 +12,7 @@ namespace ECommerce.Areas.Admin.Controllers
     // Usaremos "ADMIN" en mayúsculas. Recuerda que si 'Admin' te funcionó, 
     // debes corregir Program.cs para usar 'Admin' y ser consistente.
     [Area("Admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,ADMIN")]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;

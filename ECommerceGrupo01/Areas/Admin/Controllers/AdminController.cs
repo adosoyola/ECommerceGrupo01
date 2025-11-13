@@ -6,7 +6,7 @@ using System.Linq;
 namespace ECommerce.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,ADMIN")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
