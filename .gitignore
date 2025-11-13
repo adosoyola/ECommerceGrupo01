@@ -1,0 +1,8 @@
+# Ignorar todos los archivos de compilación
+**/[Bb]in/
+**/[Oo]bj/
+
+# Ignorar archivos temporales de Visual Studio
+.vs/
+*.suo
+*.user
