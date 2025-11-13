@@ -1,3 +1,7 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -6,11 +10,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Admin</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
 </head>
 
 <body>
@@ -18,17 +19,30 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
             <div class="container-fluid">
 
-                <!-- HOME a la izquierda -->
                 <a class="navbar-brand" href="/">🏠 Home</a>
 
-                <!-- Texto centrado -->
-                <span class="navbar-text fw-bold text-white position-absolute start-50 translate-middle-x">
+                <span
+                    class="navbar-text fw-bold text-white position-absolute start-50 translate-middle-x d-none d-md-block">
                     SYSTEMCUSCO
                 </span>
 
-                <!-- Opciones a la derecha -->
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav ms-auto">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto align-items-center">
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item me-3">
+                                <span class="text-light">
+                                    <i class="bi bi-person-circle"></i> Hola, @UserManager.GetUserName(User)
+                                </span>
+                            </li>
+                        }
+
                         <li class="nav-item">
                             <a class="nav-link text-danger"
                                 href="javascript:document.getElementById('logoutForm').submit();">
@@ -44,13 +58,10 @@
         </nav>
     </header>
 
-
-
     <main class="container mt-4">
         @RenderBody()
     </main>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     @RenderSection("Scripts", required: false)
