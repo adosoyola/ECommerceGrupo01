@@ -120,7 +120,7 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("Usuario creó una nueva cuenta con contraseña.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -145,9 +145,41 @@ namespace ECommerce.Areas.Identity.Pages.Account
                     }
                 }
                 foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+{
+    // Por defecto, usamos el error original (en inglés)
+    string translatedError = error.Description; 
+
+    // --- Traducción Manual ---
+    // Aquí "interceptamos" los errores que conocemos y los traducimos.
+    switch (error.Code)
+    {
+        case "PasswordRequiresNonAlphanumeric":
+            translatedError = "La contraseña debe tener al menos un carácter no alfanumérico (ej. @, #, $).";
+            break;
+
+        case "PasswordRequiresLower":
+            translatedError = "La contraseña debe tener al menos una letra minúscula ('a'-'z').";
+            break;
+
+        case "PasswordRequiresUpper":
+            translatedError = "La contraseña debe tener al menos una letra mayúscula ('A'-'Z').";
+            break;
+
+        case "PasswordRequiresDigit":
+            translatedError = "La contraseña debe tener al menos un dígito ('0'-'9').";
+            break;
+
+        case "DuplicateUserName":
+            translatedError = $"El nombre de usuario '{Input.Email}' ya está en uso.";
+            break;
+
+        case "DuplicateEmail":
+            translatedError = $"El correo electrónico '{Input.Email}' ya está en uso.";
+            break;
+    }
+
+    ModelState.AddModelError(string.Empty, translatedError);
+}
             }
 
             // If we got this far, something failed, redisplay form
