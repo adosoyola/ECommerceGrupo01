@@ -1,151 +1,252 @@
+@model ECommerce.Areas.Admin.Controllers.ReportsViewModel
 @{
-    ViewData["Title"] = "📊 Reportes";
+    ViewData["Title"] = "Reportes";
     Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    var culture = new System.Globalization.CultureInfo("es-PE");
+
+    // Calculamos el total para mostrarlo en el resumen
+    var totalVentas = Model.OrderReport.Sum(x => x.Total);
+
+    // ✅ CORRECCIÓN DEL ERROR: Definimos el nombre del archivo aquí como string simple
+    string nombreArchivoPdf = $"Reporte_Gestion_{DateTime.Now:yyyyMMdd}.pdf";
 }
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/Admin">⚙️ Panel Admin</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
-                aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/Admin/Products">📦 Productos</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Admin/Orders">🛒 Órdenes</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/Admin/Users">👥 Usuarios</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="/Admin/Reports">📊 Reportes</a>
-                </li>
-                
-            </ul>
-        </div>
-    </div>
-</nav>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📊 Reportes de Gestión</h2>
 
-<form method="get" asp-action="ExportarPDF" class="mb-3">
-    <input type="hidden" name="fechaInicio" value="@ViewBag.FechaInicio" />
-    <input type="hidden" name="fechaFin" value="@ViewBag.FechaFin" />
-    <button type="submit" class="btn btn-danger">
-        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+    <button onclick="descargarPDF()" class="btn btn-danger shadow-sm">
+        <i class="bi bi-file-earmark-pdf"></i> Descargar Reporte PDF
     </button>
-</form>
-<!-- FILTRO DE FECHAS -->
-<form method="get" class="row g-3 mb-4">
-    <div class="col-md-4">
-        <label class="form-label">Desde:</label>
-        <input type="date" name="fechaInicio" value="@ViewBag.FechaInicio" class="form-control" />
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Hasta:</label>
-        <input type="date" name="fechaFin" value="@ViewBag.FechaFin" class="form-control" />
-    </div>
-    <div class="col-md-4 d-flex align-items-end">
-        <button type="submit" class="btn btn-success w-100">Filtrar</button>
-    </div>
-</form>
+</div>
 
-<!-- TARJETAS DE TOTALES -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="card bg-primary text-white text-center shadow">
-            <div class="card-body">
-                <h5>💰 Ventas Totales</h5>
-                <h3>S/ @ViewBag.TotalVentas.ToString("N2")</h3>
+<div class="card shadow-sm mb-4 border-0">
+    <div class="card-body bg-light rounded">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Desde:</label>
+                <input type="date" name="fechaInicio" class="form-control"
+                    value="@(Model.FechaInicio.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Hasta:</label>
+                <input type="date" name="fechaFin" class="form-control"
+                    value="@(Model.FechaFin.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Actualizar Datos
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="area-reporte" class="p-2 bg-white">
+
+    <div class="alert alert-info d-flex justify-content-between align-items-center">
+        <span><strong>Periodo:</strong> @Model.FechaInicio.ToShortDateString() al
+            @Model.FechaFin.ToShortDateString()</span>
+        <span class="fs-5">Total Vendido: <strong>@totalVentas.ToString("C", culture)</strong></span>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-white border-bottom-0">
+            <h5 class="mb-0 text-primary"><i class="bi bi-graph-up"></i> Tendencia de Ventas</h5>
+        </div>
+        <div class="card-body">
+            <div style="height: 350px;">
+                <canvas id="ventasChart"></canvas>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-success text-white text-center shadow">
-            <div class="card-body">
-                <h5>📦 Órdenes Entregadas</h5>
-                <h3>@ViewBag.OrdenesEntregadas</h3>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-success text-white fw-bold d-flex justify-content-between">
+                    <span><i class="bi bi-cart-check"></i> Detalle de Órdenes</span>
+                    <span class="badge bg-white text-success">@Model.OrderReport.Count órdenes</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.OrderReport.Any())
+                                {
+                                    @foreach (var order in Model.OrderReport)
+                                    {
+                                        <tr>
+                                            <td>#@order.Id</td>
+                                            <td>@order.CreatedAt.ToString("dd/MM")</td>
+                                            <td class="small text-truncate" style="max-width: 100px;">
+                                                @(order.User?.Email ?? "Invitado")
+                                            </td>
+                                            <td class="text-end fw-bold">@order.Total.ToString("C", culture)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3">Sin ventas en este periodo.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light border-top">
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">TOTAL:</td>
+                                    <td class="text-end text-success">@totalVentas.ToString("C", culture)</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card bg-dark text-white text-center shadow">
-            <div class="card-body">
-                <h5>🧾 Total de Órdenes</h5>
-                <h3>@ViewBag.OrdenesTotales</h3>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-warning text-dark fw-bold">
+                    <i class="bi bi-box-seam"></i> Estado del Inventario
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-dark sticky-top">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-end">Precio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.ProductReport.Any())
+                                {
+                                    @foreach (var item in Model.ProductReport)
+                                    {
+                                        <tr>
+                                            <td>@item.Name</td>
+                                            <td class="text-center">
+                                                @if (item.Stock < 10)
+                                                {
+                                                    <span class="badge bg-danger">@item.Stock (Bajo)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">@item.Stock</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">@item.Price.ToString("C", culture)</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3" class="text-center py-3">No hay productos.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<hr />
-
-<!-- GRÁFICO DE VENTAS -->
-<h4 class="mt-4 mb-3">📈 Ventas por día</h4>
-<canvas id="ventasChart" height="120"></canvas>
-
-<hr class="my-5" />
-
-<!-- TABLA DE PRODUCTOS MÁS VENDIDOS -->
-<h4 class="mt-4 mb-3">🏆 Productos más vendidos</h4>
-<table class="table table-striped table-hover align-middle">
-    <thead class="table-success">
-        <tr>
-            <th>Producto</th>
-            <th>Cantidad Vendida</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in ViewBag.ProductosMasVendidos)
-        {
-            <tr>
-                <td>@item.Producto</td>
-                <td>@item.Cantidad</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const labels = [
-            @foreach (var item in ViewBag.VentasPorDia)
-            {
-                @: "@item.Fecha.ToString("dd/MM")",
-                ;
-            }
-        ];
-        const data = [
-            @foreach (var item in ViewBag.VentasPorDia)
-            {
-                @: @item.Total,
-                ;
-            }
-        ];
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-        const ctx = document.getElementById('ventasChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Ventas (S/)',
-                    data: data,
-                    borderColor: '#198754',
-                    backgroundColor: 'rgba(25, 135, 84, 0.5)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Configuración del Gráfico (Lineal)
+            const labels = @Json.Serialize(Model.ChartData.Select(x => x.DateLabel));
+            const dataValues = @Json.Serialize(Model.ChartData.Select(x => x.TotalAmount));
+
+            const ctx = document.getElementById('ventasChart').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'line', // 🟢 GRÁFICO LINEAL (Lo que pediste)
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventas (S/)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4, // Curva suave
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(54, 162, 235, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function (context) {
+                                    return ' Total: S/ ' + context.raw.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Monto en Soles (S/)' }
+                        }
+                    }
                 }
-            }
+            });
         });
+
+        // 2. Función PDF (Javascript puro, sin ir al servidor)
+        function descargarPDF() {
+            const element = document.getElementById('area-reporte');
+            const btn = document.querySelector('button[onclick="descargarPDF()"]');
+
+            // Pasamos el nombre del archivo desde C# a una variable JS
+            const fileName = "@nombreArchivoPdf";
+
+            // Feedback visual
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando...';
+            btn.disabled = true;
+
+            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth() - 20; // Margen
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
+                pdf.save(fileName);
+
+                // Restaurar botón
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
     </script>
 }
