@@ -40,12 +40,19 @@
                 @if (User.Identity?.IsAuthenticated ?? false)
                 {
                     <li class="nav-item">
-                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
-                            <button type="submit" class="nav-link btn btn-link text-danger p-0">
-                                🚪 Cerrar sesión (@User.Identity.Name)
-                            </button>
-                        </form>
-                    </li>
+    <a href="#"
+       class="nav-link text-danger"
+       onclick="document.getElementById('logoutForm').submit(); return false;">
+        🚪 Cerrar sesión (@User.Identity.Name.Split('@')[0])
+    </a>
+
+    <form id="logoutForm"
+          asp-area="Identity"
+          asp-page="/Account/Logout"
+          method="post"
+          class="d-none">
+    </form>
+</li>
                 }
                 else
                 {

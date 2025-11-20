@@ -13,12 +13,14 @@ public class CheckoutController : Controller
     private readonly UserManager<IdentityUser> _userManager;
     private readonly PaymentProcessor _paymentProcessor;
     private const string SessionKey = "CartSession";
+    private readonly IEmailService _emailService;
 
-    public CheckoutController(ApplicationDbContext db, UserManager<IdentityUser> userManager, PaymentProcessor paymentProcessor)
+    public CheckoutController(ApplicationDbContext db, UserManager<IdentityUser> userManager, PaymentProcessor paymentProcessor, IEmailService emailService)
     {
         _db = db;
         _userManager = userManager;
         _paymentProcessor = paymentProcessor;
+        _emailService = emailService; // <-- guardar en variable
     }
 
     private List<CartItem> GetCart()
@@ -139,6 +141,75 @@ public class CheckoutController : Controller
             // 5. Limpiar Carrito
             SaveCart(new List<CartItem>());
 
+           
+
+            // ============================
+            // 📧 ENVÍO DE CORREO AL USUARIO
+            // ============================
+
+            var email = user.Email;
+            string subject = $"Tu pedido #{order.Id} ha sido realizado con éxito";
+            string body = $@"
+               <table style='background-color:#f4f4f4; padding:20px; font-family:Arial; width:100%;'>
+    <tr>
+        <td>
+            <table style='max-width:600px; margin:auto; background:white; padding:30px; border-radius:10px;'>
+                
+                <tr>
+                    <td style='text-align:center'>
+                        <h2 style='color:#4CAF50;'>¡Gracias por tu compra!</h2>
+                        <p style='font-size:16px; color:#555;'>Tu pedido ha sido procesado correctamente.</p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <h3 style='color:#333;'>📦 Detalles del Pedido</h3>
+                        <p style='font-size:15px; color:#555;'>
+                            <strong>N° de Pedido:</strong> #{order.Id}<br>
+                            <strong>Total pagado:</strong> S/ {order.Total}<br>
+                            <strong>Estado:</strong> {order.Status}<br>
+                            <strong>Fecha:</strong> {DateTime.Now:dd/MM/yyyy HH:mm}
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <h3 style='color:#333;'>🛒 Productos</h3>
+                        <table style='width:100%; border-collapse:collapse;'>
+                            <tr>
+                                <th style='border-bottom:1px solid #ddd; padding:8px; text-align:left;'>Producto</th>
+                                <th style='border-bottom:1px solid #ddd; padding:8px; text-align:center;'>Cantidad</th>
+                                <th style='border-bottom:1px solid #ddd; padding:8px; text-align:right;'>Subtotal</th>
+                            </tr>
+                            {string.Join("", order.Items.Select(i => $@"
+                                <tr>
+                                    <td style='padding:8px;'>{i.ProductName}</td>
+                                    <td style='padding:8px; text-align:center;'>{i.Quantity}</td>
+                                    <td style='padding:8px; text-align:right;'>S/ {(i.UnitPrice * i.Quantity):0.00}</td>
+                                </tr>
+                            "))}
+                        </table>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style='text-align:center; padding-top:25px;'>
+                        <p style='color:#555;'>Nos pondremos en contacto cuando tu pedido esté listo para envío.</p>
+                        <p style='font-size:14px; color:#888;'>© {DateTime.Now.Year} - ECommerce Group 01</p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>";
+
+            await _emailService.SendEmailAsync(email, subject, body);
+
+
+            
             // 6. Redirigir a "Success"
             TempData["SuccessMessage"] = $"¡Pedido #{order.Id} realizado con éxito!";
             // Corrección: El nombre de tu vista de éxito es 'Success.cshtml'
@@ -146,11 +217,10 @@ public class CheckoutController : Controller
             return RedirectToAction("Success");
         }
         catch (Exception ex)
-        {
-            // Log real (ej: _logger.LogError(ex, "Error en ProcessPaymentSimulation"))
-            TempData["Error"] = "Ocurrió un error inesperado al procesar el pago.";
-            return View("PaymentSimulation", GetCart());
-        }
+{
+    TempData["Error"] = $"ERROR DETALLADO: {ex.Message}";
+    return View("PaymentSimulation", GetCart());
+}
     }
 
     // ACCIÓN NUEVA: Página de éxito
