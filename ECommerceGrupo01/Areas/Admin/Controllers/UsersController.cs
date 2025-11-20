@@ -2,18 +2,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ECommerce.Areas.Admin.Models; // ✅ Importante: Usa tu modelo
 using System.Linq;
 using System.Threading.Tasks;
-using ECommerce.Areas.Admin.Models; // 🔑 AÑADIDO: Para los ViewModels
+using System.Collections.Generic;
 
 namespace ECommerce.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")] // 🔑 Ojo: si tu rol es "ADMIN", usa "ADMIN"
+    [Authorize(Roles = "Admin,ADMIN")]
     public class UsersController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+
+        private const string SuperAdminEmail = "admin@ecommerce.com";
 
         public UsersController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
@@ -21,100 +24,31 @@ namespace ECommerce.Areas.Admin.Controllers
             _roleManager = roleManager;
         }
 
-        // GET: Admin/Users
-        // 🔑 ACTUALIZADO para usar el ViewModel
+        // ✅ GET: Admin/Users (MÉTODO CORREGIDO)
         public async Task<IActionResult> Index()
         {
+            // 1. Traemos todos los usuarios de la BD
             var users = await _userManager.Users.ToListAsync();
 
-            var userViewModels = new List<UserWithRolesViewModel>();
+            // 2. Preparamos la lista vacía del modelo que espera la vista
+            var model = new List<UserWithRolesViewModel>();
 
-            // Usamos "ADMIN" (mayúsculas) como está en EditRoles.cshtml
-            const string adminRole = "ADMIN";
-
+            // 3. Recorremos cada usuario para llenar la lista
             foreach (var user in users)
             {
-                userViewModels.Add(new UserWithRolesViewModel
+                var roles = await _userManager.GetRolesAsync(user);
+                var isAdmin = roles.Any(r => r.ToUpper() == "ADMIN");
+
+                model.Add(new UserWithRolesViewModel
                 {
                     User = user,
-                    // Comprueba si el usuario tiene el rol "ADMIN"
-                    IsAdmin = await _userManager.IsInRoleAsync(user, adminRole)
+                    IsAdmin = isAdmin
                 });
             }
 
-            // Pasamos la nueva lista de ViewModels a la vista
-            return View(userViewModels);
+            // 4. Enviamos la lista convertida (UserWithRolesViewModel)
+            return View(model);
         }
-
-        // GET: Admin/Users/EditRoles/userId
-        public async Task<IActionResult> EditRoles(string id)
-        {
-            if (id == null) return NotFound();
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            // 🔑 Usamos "ADMIN" (mayúsculas)
-            ViewBag.IsAdmin = roles.Contains("ADMIN");
-            return View(user);
-        }
-
-        // POST: Admin/Users/EditRoles
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditRoles(string id, bool isAdmin)
-        {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
-
-            // Usamos "ADMIN" (mayúsculas) como lo tienes
-            const string adminRole = "ADMIN";
-            var roles = await _userManager.GetRolesAsync(user);
-            bool userIsCurrentlyAdmin = roles.Contains(adminRole);
-
-            // Caso 1: Se marca como Admin (isAdmin=true) Y NO lo es (!userIsCurrentlyAdmin)
-            if (isAdmin && !userIsCurrentlyAdmin)
-            {
-                var result = await _userManager.AddToRoleAsync(user, adminRole);
-                if (result.Succeeded)
-                {
-                    TempData["SuccessMessage"] = $"Rol ADMIN asignado a {user.Email}.";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Error al asignar el rol.";
-                }
-            }
-            // Caso 2: Se desmarca como Admin (isAdmin=false) Y SÍ lo es (userIsCurrentlyAdmin)
-            else if (!isAdmin && userIsCurrentlyAdmin)
-            {
-                // 🔑 ¡PROTECCIÓN IMPORTANTE!
-                // Evita que el admin actual se quite el rol a sí mismo.
-                var currentUserId = _userManager.GetUserId(User);
-                if (user.Id == currentUserId)
-                {
-                    TempData["ErrorMessage"] = "Error: No puedes quitarte el rol de Admin a ti mismo.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                var result = await _userManager.RemoveFromRoleAsync(user, adminRole);
-                if (result.Succeeded)
-                {
-                    TempData["SuccessMessage"] = $"Rol ADMIN removido de {user.Email}.";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Error al remover el rol.";
-                }
-            }
-            // Caso 3: No hay cambios (se marca y ya era admin, o se desmarca y no era admin)
-            // Simplemente redirigimos sin mensaje.
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // --- Acciones CRUD ---
 
         // GET: Admin/Users/Create
         [HttpGet]
@@ -128,51 +62,32 @@ namespace ECommerce.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateUserViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                return View(model);
-            }
+                var user = new IdentityUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    EmailConfirmed = true
+                };
 
-            // 🔑 INICIO: Lógica para UserName antes del @
-            // 1. Extraer el nombre de usuario
-            var userName = model.Email.Split('@').FirstOrDefault() ?? model.Email;
+                var result = await _userManager.CreateAsync(user, model.Password);
 
-            // 2. ⚠️ ¡Validación de Seguridad!
-            // Comprobar si ese UserName (ej: "juan") ya existe
-            var existingUser = await _userManager.FindByNameAsync(userName);
-            if (existingUser != null)
-            {
-                ModelState.AddModelError("Email", $"El nombre de usuario '{userName}' (derivado del email) ya existe. Pruebe con otro email.");
-                return View(model);
-            }
-            // 🔑 FIN: Lógica para UserName
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = "Usuario creado correctamente.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            // 3. Crear el usuario
-            var user = new IdentityUser
-            {
-                UserName = userName, // ⬅️ Usamos el nuevo UserName
-                Email = model.Email,
-                EmailConfirmed = true // Confirmado porque lo crea el Admin
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
-            {
-                TempData["SuccessMessage"] = $"Usuario {user.Email} (UserName: {user.UserName}) creado exitosamente.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            // Si falla, mostrar errores
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
             return View(model);
         }
 
-        // GET: Admin/Users/Delete/userId
-        [HttpGet]
+        // GET: Admin/Users/Delete/5
         public async Task<IActionResult> Delete(string id)
         {
             if (id == null) return NotFound();
@@ -180,45 +95,95 @@ namespace ECommerce.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            var currentUserId = _userManager.GetUserId(User);
-            if (user.Id == currentUserId)
+            if (user.Email.Equals(SuperAdminEmail, System.StringComparison.OrdinalIgnoreCase))
             {
-                TempData["ErrorMessage"] = "Error: No puedes eliminar tu propia cuenta de administrador.";
+                TempData["ErrorMessage"] = "🚫 No puedes eliminar la cuenta Principal.";
                 return RedirectToAction(nameof(Index));
             }
 
             return View(user);
         }
 
-        // POST: Admin/Users/Delete/userId
+        // POST: Admin/Users/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            if (user == null) return RedirectToAction(nameof(Index));
+
+            if (user.Email.Equals(SuperAdminEmail, System.StringComparison.OrdinalIgnoreCase))
             {
-                TempData["ErrorMessage"] = "Usuario no encontrado.";
+                TempData["ErrorMessage"] = "🚫 ACCESO DENEGADO: La cuenta Principal es intocable.";
                 return RedirectToAction(nameof(Index));
             }
 
             var currentUserId = _userManager.GetUserId(User);
             if (user.Id == currentUserId)
             {
-                TempData["ErrorMessage"] = "Error: No puedes eliminar tu propia cuenta.";
+                TempData["ErrorMessage"] = "⚠️ No puedes eliminar tu propia cuenta mientras estás conectado.";
                 return RedirectToAction(nameof(Index));
             }
 
             var result = await _userManager.DeleteAsync(user);
             if (result.Succeeded)
+                TempData["SuccessMessage"] = "Usuario eliminado correctamente.";
+            else
+                TempData["ErrorMessage"] = "Error al eliminar usuario.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Admin/Users/EditRoles/5
+        [HttpGet]
+        public async Task<IActionResult> EditRoles(string id)
+        {
+            if (id == null) return NotFound();
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var roles = await _userManager.GetRolesAsync(user);
+            ViewBag.IsAdmin = roles.Contains("ADMIN") || roles.Contains("Admin");
+
+            return View(user);
+        }
+
+        // POST: Admin/Users/EditRoles
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditRoles(string id, bool isAdmin)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            // Lógica para agregar o quitar rol ADMIN
+            if (isAdmin)
             {
-                TempData["SuccessMessage"] = $"Usuario {user.Email} ha sido eliminado.";
+                if (!await _userManager.IsInRoleAsync(user, "ADMIN"))
+                {
+                    await _userManager.AddToRoleAsync(user, "ADMIN");
+                }
             }
             else
             {
-                TempData["ErrorMessage"] = $"Error al eliminar {user.Email}.";
+                // Evitar quitarse admin a sí mismo o al SuperAdmin
+                if (user.Email.Equals(SuperAdminEmail, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    TempData["ErrorMessage"] = "No puedes quitarle permisos al SuperAdmin.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (await _userManager.IsInRoleAsync(user, "ADMIN"))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, "ADMIN");
+                }
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    await _userManager.RemoveFromRoleAsync(user, "Admin");
+                }
             }
 
+            TempData["SuccessMessage"] = "Roles actualizados correctamente.";
             return RedirectToAction(nameof(Index));
         }
     }

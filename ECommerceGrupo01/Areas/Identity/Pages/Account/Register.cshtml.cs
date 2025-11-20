@@ -74,29 +74,29 @@ namespace ECommerce.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
-            public string Email { get; set; }
+            [Required(ErrorMessage = "El campo Correo Electrónico es obligatorio.")]
+            [EmailAddress(ErrorMessage = "El campo Correo Electrónico no es una dirección válida.")]
+            [Display(Name = "Correo Electrónico")]
+            public string Email { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-            [DataType(DataType.Password)]
-            [Display(Name = "Password")]
-            public string Password { get; set; }
+            [Required(ErrorMessage = "El campo Contraseña es obligatorio.")]
+            [StringLength(100, ErrorMessage = "La {0} debe tener al menos {2} y un máximo de {1} caracteres.", MinimumLength = 6)]
+            [DataType(DataType.Password)]
+            [Display(Name = "Contraseña")]
+            public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-            public string ConfirmPassword { get; set; }
+            [Display(Name = "Confirmar contraseña")]
+            [Compare("Password", ErrorMessage = "La contraseña y la contraseña de confirmación no coinciden.")]
+            public string ConfirmPassword { get; set; }
         }
 
 
@@ -120,7 +120,7 @@ namespace ECommerce.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User created a new account with password.");
+                    _logger.LogInformation("Usuario creó una nueva cuenta con contraseña.");
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -131,8 +131,8 @@ namespace ECommerce.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirma tu correo electrónico",
+                        $"Por favor, confirma tu cuenta haciendo <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clic aquí</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
@@ -145,9 +145,41 @@ namespace ECommerce.Areas.Identity.Pages.Account
                     }
                 }
                 foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+{
+    // Por defecto, usamos el error original (en inglés)
+    string translatedError = error.Description; 
+
+    // --- Traducción Manual ---
+    // Aquí "interceptamos" los errores que conocemos y los traducimos.
+    switch (error.Code)
+    {
+        case "PasswordRequiresNonAlphanumeric":
+            translatedError = "La contraseña debe tener al menos un carácter no alfanumérico (ej. @, #, $).";
+            break;
+
+        case "PasswordRequiresLower":
+            translatedError = "La contraseña debe tener al menos una letra minúscula ('a'-'z').";
+            break;
+
+        case "PasswordRequiresUpper":
+            translatedError = "La contraseña debe tener al menos una letra mayúscula ('A'-'Z').";
+            break;
+
+        case "PasswordRequiresDigit":
+            translatedError = "La contraseña debe tener al menos un dígito ('0'-'9').";
+            break;
+
+        case "DuplicateUserName":
+            translatedError = $"El nombre de usuario '{Input.Email}' ya está en uso.";
+            break;
+
+        case "DuplicateEmail":
+            translatedError = $"El correo electrónico '{Input.Email}' ya está en uso.";
+            break;
+    }
+
+    ModelState.AddModelError(string.Empty, translatedError);
+}
             }
 
             // If we got this far, something failed, redisplay form

@@ -2,7 +2,7 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Iniciar Seción";
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -10,7 +10,7 @@
     <div class="col-md-4">
         <section>
             <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
+                <h2>Usa una cuenta local para iniciar sesión.</h2>
                 <hr />
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
@@ -18,11 +18,17 @@
                     <label asp-for="Input.Email" class="form-label">Email</label>
                     <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
+               <div class="mb-3">
+    <label asp-for="Input.Password" class="form-label">Contraseña</label>
+    <div class="input-group password-container">
+        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" id="passwordInput" />
+        
+        <button class="btn btn-outline-secondary password-toggle" type="button" id="togglePassword" title="Mostrar contraseña">
+            <i class="bi bi-eye-slash" aria-hidden="true"></i> 
+        </button>
+    </div>
+    <span asp-validation-for="Input.Password" class="text-danger"></span>
+</div>
                 <div class="checkbox mb-3">
                     <label asp-for="Input.RememberMe" class="form-label">
                         <input class="form-check-input" asp-for="Input.RememberMe" />
@@ -30,17 +36,17 @@
                     </label>
                 </div>
                 <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Acceso</button>
                 </div>
                 <div>
                     <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+                        <a id="forgot-password" asp-page="./ForgotPassword">¿Olvidaste tu contraseña?</a>
                     </p>
                     <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
+                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Registrarse como un nuevo usuario</a>
                     </p>
                     <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
+                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Reenviar correo de confirmación</a>
                     </p>
                 </div>
             </form>
@@ -48,15 +54,15 @@
     </div>
     <div class="col-md-6 col-md-offset-2">
         <section>
-            <h3>Use another service to log in.</h3>
+            <h3>Usar otro servicio para iniciar sesión.</h3>
             <hr />
             @{
                 if ((Model.ExternalLogins?.Count ?? 0) == 0)
                 {
                     <div>
                         <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
+                            No hay servicios de autenticación externos configurados. Consulte este <a href="https://go.microsoft.com/fwlink/?LinkID=532715">artículo
+                            sobre cómo configurar esta aplicación ASP.NET para admitir el inicio de sesión mediante servicios externos.</a>.
                         </p>
                     </div>
                 }
@@ -80,4 +86,36 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Función general para alternar el tipo de input y el icono
+        function togglePasswordVisibility(buttonId, inputId) {
+            // Seleccionar el campo de input y el icono
+            const input = $(`#${inputId}`);
+            const icon = $(`#${buttonId}`).find('i');
+
+            if (input.attr('type') === 'password') {
+                // Si es password, cambiar a text y cambiar a icono de ojo abierto
+                input.attr('type', 'text');
+                icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            } else {
+                // Si es text, cambiar a password y cambiar a icono de ojo cerrado
+                input.attr('type', 'password');
+                icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            }
+        }
+
+        $(document).ready(function () {
+            // 1. Enlace para el campo de Contraseña
+            $('#togglePassword').click(function () {
+                togglePasswordVisibility('togglePassword', 'passwordInput');
+            });
+
+            // 2. Enlace para el campo de Confirmar Contraseña
+            // (Este selector no encontrará nada en Login.cshtml, pero no da error)
+            $('#toggleConfirmPassword').click(function () {
+                togglePasswordVisibility('toggleConfirmPassword', 'confirmPasswordInput');
+            });
+        });
+    </script>
 }
