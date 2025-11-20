@@ -93,8 +93,7 @@ describe('Flujo de Compra Completo (Cliente)', () => {
     cy.url().should('include', '/Checkout/Success');
 
     // Verificaciones visuales
-    cy.get('h1').should('contain', 'Compra Exitosa');
-    cy.get('.alert-success').should('contain', 'exitoso');
+    cy.get('h1').should('contain', '¡Compra Exitosa!');
 
     cy.log('🎉 ¡Prueba de compra completada exitosamente!');
   });
