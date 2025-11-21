@@ -27,6 +27,9 @@ builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+ 
+
+
 // Identity con Roles y token providers
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
