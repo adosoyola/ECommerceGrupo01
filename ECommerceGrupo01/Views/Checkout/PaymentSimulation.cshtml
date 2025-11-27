@@ -7,9 +7,8 @@
 }
 
 <div class="container mt-5">
-    <h1 class="text-center mb-4">💳 Finalizar Compra (Simulación)</h1>
+    <h1 class="text-center mb-4">💳 Finalizar Compra</h1>
 
-    <!-- Mostrar mensajes de error -->
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -22,21 +21,36 @@
         <div class="col-md-5 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    Resumen del Pedido
+                    <i class="bi bi-bag-check"></i> Resumen del Pedido
                 </div>
-                <div class="card-body">
-                    <p class="h5">Productos:</p>
-                    <ul class="list-group list-group-flush mb-3">
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
                         @foreach (var item in Model)
                         {
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>@item.Name (@item.Quantity)</span>
-                                <strong>@((item.UnitPrice * item.Quantity).ToString("C", new
-                                                                    System.Globalization.CultureInfo("es-PE")))</strong>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="@(string.IsNullOrEmpty(item.Image) ? "/imagenes/no-image.png" : item.Image)" 
+                                         alt="@item.Name" 
+                                         class="rounded border me-3" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                    
+                                    <div>
+                                        <h6 class="my-0">@item.Name</h6>
+                                        <small class="text-muted">Cant: @item.Quantity</small>
+                                    </div>
+                                </div>
+                                <span class="text-muted fw-bold">
+                                    @((item.UnitPrice * item.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE")))
+                                </span>
                             </li>
                         }
                     </ul>
-                    <h4 class="text-end">Total a Pagar: <span class="text-success fw-bold">@totalFormatted</span></h4>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h5 mb-0">Total a Pagar:</span>
+                        <span class="h4 mb-0 text-success fw-bold">@totalFormatted</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -44,46 +58,68 @@
         <div class="col-md-5">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
-                    Datos de Pago
+                    <i class="bi bi-credit-card"></i> Datos de Pago
                 </div>
                 <div class="card-body">
+                    
+                    @if (ViewBag.DeliveryMethod == "HomeDelivery")
+                    {
+                        <div class="alert alert-info mb-3 border-info d-flex align-items-center">
+                            <i class="bi bi-truck-front-fill fs-3 me-3"></i> 
+                            <div>
+                                <strong>Envío a Domicilio</strong> <br>
+                                <small>(Llega en máx 2 días hábiles)</small>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-3 border-warning text-dark d-flex align-items-center">
+                            <i class="bi bi-shop fs-3 me-3"></i>
+                            <div>
+                                <strong>Recojo en Tienda</strong> <br>
+                                <small>(Debe acercarse al local)</small>
+                            </div>
+                        </div>
+                    }
+
                     <form asp-controller="Checkout" asp-action="ProcessPaymentSimulation" method="post">
                         @Html.AntiForgeryToken()
 
                         <div class="mb-3">
-                            <label for="CardNumber" class="form-label">Número de tarjeta</label>
-                            <input type="text" class="form-control" id="CardNumber" name="CardNumber" required
-                                maxlength="19" placeholder="XXXX XXXX XXXX XXXX" autocomplete="off"
-                                value="@(ViewData["CardNumber"] ?? "")">
-                            <div class="form-text">Usar: 4111 1111 1111 1111 (Éxito)</div>
-                            <span class="text-danger field-validation-valid" data-valmsg-for="CardNumber"
-                                data-valmsg-replace="true"></span>
+                            <label for="CardNumber" class="form-label fw-bold">Número de tarjeta</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-credit-card-2-front"></i></span>
+                                <input type="text" class="form-control" id="CardNumber" name="CardNumber" required
+                                    maxlength="19" placeholder="0000 0000 0000 0000" autocomplete="off"
+                                    value="@(ViewData["CardNumber"] ?? "")">
+                            </div>
+                            <div class="form-text text-muted">Tarjeta de prueba: 4111 1111 1111 1111</div>
                         </div>
 
                         <div class="row">
                             <div class="col-7 mb-3">
-                                <label for="Expiration" class="form-label">Fecha de expiración (MM/AA)</label>
+                                <label for="Expiration" class="form-label fw-bold">Vencimiento</label>
                                 <input type="text" class="form-control" id="Expiration" name="Expiration" required
                                     maxlength="5" placeholder="MM/AA" autocomplete="off"
                                     value="@(ViewData["Expiration"] ?? "")">
-                                <span class="text-danger field-validation-valid" data-valmsg-for="Expiration"
-                                    data-valmsg-replace="true"></span>
                             </div>
 
                             <div class="col-5 mb-3">
-                                <label for="CVV" class="form-label">CVV</label>
-                                <input type="text" class="form-control" id="CVV" name="CVV" required maxlength="4"
-                                    placeholder="123" autocomplete="off" value="@(ViewData["CVV"] ?? "")">
-                                <span class="text-danger field-validation-valid" data-valmsg-for="CVV"
-                                    data-valmsg-replace="true"></span>
+                                <label for="CVV" class="form-label fw-bold">CVV</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="CVV" name="CVV" required maxlength="4"
+                                        placeholder="123" autocomplete="off" value="@(ViewData["CVV"] ?? "")">
+                                    <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                </div>
                             </div>
                         </div>
 
                         <input type="hidden" name="Amount" value="@total" />
 
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-lock-fill me-2"></i> Pagar @totalFormatted
+                            <button type="submit" class="btn btn-success btn-lg shadow hover-effect">
+                                Pagar @totalFormatted <i class="bi bi-check-circle-fill ms-2"></i>
                             </button>
                         </div>
                     </form>
@@ -91,7 +127,9 @@
             </div>
 
             <div class="text-center mt-3">
-                <a asp-controller="Cart" asp-action="Index" class="btn btn-link text-muted">Volver al Carrito</a>
+                <a asp-controller="Checkout" asp-action="Confirm" class="btn btn-link text-secondary text-decoration-none">
+                    <i class="bi bi-arrow-left"></i> Volver a Confirmación
+                </a>
             </div>
         </div>
     </div>
@@ -99,18 +137,16 @@
 
 @section Scripts {
     <script>
-        // Script simplificado - solo formato básico
         document.addEventListener('DOMContentLoaded', function () {
             const cardNumber = document.getElementById('CardNumber');
             const expiration = document.getElementById('Expiration');
             const cvv = document.getElementById('CVV');
 
-            // Formato de tarjeta
+            // Formato de tarjeta (Espacios cada 4 dígitos)
             if (cardNumber) {
                 cardNumber.addEventListener('input', function (e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length > 16) value = value.substring(0, 16);
-
                     let formatted = '';
                     for (let i = 0; i < value.length; i += 4) {
                         formatted += value.substring(i, i + 4) + ' ';
@@ -119,12 +155,11 @@
                 });
             }
 
-            // Formato de expiración
+            // Formato de expiración (Slash automático)
             if (expiration) {
                 expiration.addEventListener('input', function (e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length > 4) value = value.substring(0, 4);
-
                     if (value.length >= 2) {
                         e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
                     } else {
