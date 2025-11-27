@@ -14,14 +14,13 @@
     </div>
 
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
+        <div class="card-header bg-light fw-bold">
             Información del Pedido
         </div>
         <div class="card-body row">
             <div class="col-md-6">
                 <p><strong>Fecha de Pedido:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
-                <p><strong>Total Pagado:</strong> <span class="fw-bold text-success">@Model.Total.ToString("C",
-                                                culture)</span></p>
+                <p><strong>Total Pagado:</strong> <span class="fw-bold text-success">@Model.Total.ToString("C", culture)</span></p>
             </div>
             <div class="col-md-6 text-md-end">
                 @{
@@ -37,10 +36,37 @@
                 <p><strong>Estado:</strong> <span class="badge @badgeClass fs-6">@Model.Status.ToString()</span></p>
 
                 <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank"
-                    class="btn btn-sm btn-danger d-block d-md-inline-block" title="Exportar factura como PDF">
+                    class="btn btn-sm btn-danger d-block d-md-inline-block mt-2" title="Exportar factura como PDF">
                     <i class="bi bi-file-earmark-pdf"></i> Exportar Factura
                 </a>
             </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            @if (Model.DeliveryMethod == ECommerce.Models.DeliveryMethod.HomeDelivery)
+            {
+                <div class="d-flex align-items-center text-primary">
+                    <i class="bi bi-truck fs-1 me-3"></i>
+                    <div>
+                        <h4 class="mb-1">Envío a Domicilio</h4>
+                        <p class="mb-0 fw-bold">Su pedido llegará aproximadamente en un plazo máximo de 2 días.</p>
+                        <small class="text-muted">Desde la fecha de compra: @Model.CreatedAt.ToString("dd/MM/yyyy")</small>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center text-warning">
+                    <i class="bi bi-shop fs-1 me-3"></i>
+                    <div>
+                        <h4 class="mb-1 text-dark">Recojo en Tienda</h4>
+                        <p class="mb-0 fw-bold text-dark">Debe acercarse a nuestro local para recoger sus productos.</p>
+                        <small class="text-muted">Traiga su DNI y este número de orden.</small>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 

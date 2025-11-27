@@ -1,79 +1,164 @@
 @model List<ECommerce.Models.CartItem>
-
 @{
     ViewData["Title"] = "Confirmar Compra";
+    decimal subtotal = Model.Sum(x => x.UnitPrice * x.Quantity);
+    
+    // ✅ CORRECCIÓN: Si ViewBag.ShippingCost es nulo, usa 6.00 por defecto para no romper la página
+    decimal costoEnvio = (ViewBag.ShippingCost as decimal?) ?? 6.00m; 
+    
+    var culture = new System.Globalization.CultureInfo("es-PE");
 }
 
-<!-- NAVBAR -->
-<header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark position-relative">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🏠 Home</a>
-
-            <span class="navbar-text fw-bold text-white position-absolute start-50 translate-middle-x">
-                SYSTEMCUSCO
-            </span>
-
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/Cart">🛒 Carrito</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Checkout/History">📜 Pedidos</a></li>
-
-                    @if (User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <li class="nav-item">
-                            <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="d-inline">
-                                <button type="submit" class="nav-link btn btn-link text-danger p-0">🚪 Cerrar sesión</button>
-                            </form>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-area="Identity" asp-page="/Account/Login">🔑 Iniciar sesión</a></li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
+<style>
+    .option-card { cursor: pointer; transition: all 0.2s; }
+    .option-card:hover { border-color: #0d6efd; background-color: #f8f9fa; }
+    .option-card.selected-option { border-color: #0d6efd; background-color: #e7f1ff; }
+    .option-card.selected-store { border-color: #198754; background-color: #e8f5e9; }
+</style>
 
 <div class="container mt-4">
-    <h2>✅ Confirmar Compra</h2>
+    <h2 class="fw-bold text-success text-center mb-4">✅ Confirmar Compra</h2>
 
-    <form asp-action="Confirm" method="post">
-        <table class="table table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>Producto</th>
-                    <th>Precio Unitario</th>
-                    <th>Cantidad</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Name</td>
-                    <td>@(item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("es-PE")))</td>
-                    <td>@item.Quantity</td>
-                    <td>@((item.UnitPrice * item.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE")))</td>
-                </tr>
-            }
-            </tbody>
-            <tfoot>
-                <tr class="table-secondary fw-bold">
-                    <td colspan="3" class="text-end">Total General:</td>
-                    <td>
-                        @Model.Sum(x => x.UnitPrice * x.Quantity).ToString("C", new System.Globalization.CultureInfo("es-PE"))
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
+    <form asp-action="ProcessConfirm" method="post">
+        <div class="row">
+            
+            <div class="col-md-8">
+                
+                <div class="card shadow-sm mb-4 border-0">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-cart-check"></i> Productos</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">@((item.UnitPrice * item.Quantity).ToString("C", culture))</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-        <div class="d-flex justify-content-between mt-3">
-            <a asp-controller="Cart" asp-action="Index" class="btn btn-secondary">⬅ Volver al Carrito</a>
-            <button type="submit" class="btn btn-success">✅ Confirmar Compra</button>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-truck"></i> Método de Entrega
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="form-check p-3 border rounded mb-3 option-card selected-option" id="divHome" onclick="selectOption('Home')">
+                            <input class="form-check-input" type="radio" name="deliveryMethod" id="methodHome" value="HomeDelivery" checked>
+                            <label class="form-check-label w-100" style="cursor:pointer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold fs-5">🚚 Envío a Domicilio</span>
+                                        <div class="text-muted small mt-1">Llega en un plazo máximo de 2 días hábiles.</div>
+                                    </div>
+                                    <span class="badge bg-primary fs-6">+ @costoEnvio.ToString("C", culture)</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="form-check p-3 border rounded option-card" id="divStore" onclick="selectOption('Store')">
+                            <input class="form-check-input" type="radio" name="deliveryMethod" id="methodStore" value="StorePickup">
+                            <label class="form-check-label w-100" style="cursor:pointer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold fs-5 text-success">🏪 Recojo en Tienda</span>
+                                        <div class="text-muted small mt-1">Av. La Cultura 123, Cusco. (Horario de Oficina)</div>
+                                    </div>
+                                    <span class="badge bg-success fs-6">GRATIS</span>
+                                </div>
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-success text-white fw-bold">Resumen de Costos</div>
+                    <div class="card-body">
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal Productos:</span>
+                            <span class="fw-bold">@subtotal.ToString("C", culture)</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span>Costo de Envío:</span>
+                            <span id="displayShipping" class="fw-bold">@costoEnvio.ToString("C", culture)</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between fs-4 fw-bold text-dark">
+                            <span>Total a Pagar:</span>
+                            <span id="displayTotal">@((subtotal + costoEnvio).ToString("C", culture))</span>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100 mt-4 btn-lg shadow hover-effect">
+                            Ir a Pagar <i class="bi bi-arrow-right-circle ms-1"></i>
+                        </button>
+                        
+                        <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">
+                            Volver al Carrito
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    // Variables desde C#
+    const subtotal = @subtotal;
+    const shippingCost = @costoEnvio;
+
+    function selectOption(type) {
+        // Marcar el radio button correspondiente
+        if (type === 'Home') {
+            document.getElementById('methodHome').checked = true;
+        } else {
+            document.getElementById('methodStore').checked = true;
+        }
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const isHome = document.getElementById('methodHome').checked;
+        
+        // Actualizar estilos visuales
+        const divHome = document.getElementById('divHome');
+        const divStore = document.getElementById('divStore');
+        
+        if (isHome) {
+            divHome.classList.add('selected-option');
+            divStore.classList.remove('selected-store');
+            
+            // Actualizar montos
+            document.getElementById('displayShipping').innerHTML = "S/ " + shippingCost.toFixed(2);
+            document.getElementById('displayTotal').innerHTML = "S/ " + (subtotal + shippingCost).toFixed(2);
+        } else {
+            divHome.classList.remove('selected-option');
+            divStore.classList.add('selected-store');
+            
+            // Actualizar montos (Envío 0)
+            document.getElementById('displayShipping').innerHTML = "S/ 0.00";
+            document.getElementById('displayTotal').innerHTML = "S/ " + subtotal.toFixed(2);
+        }
+    }
+</script>

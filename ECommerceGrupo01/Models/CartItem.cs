@@ -6,7 +6,8 @@ namespace ECommerce.Models
         public string Name { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
 
-        // CORRECCIÓN: La propiedad Quantity estaba comentada
+        public string Image { get; set; }
+        
         private int _quantity;
         public int Quantity
         {
