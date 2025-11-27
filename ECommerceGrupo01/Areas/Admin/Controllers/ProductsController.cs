@@ -246,5 +246,49 @@ namespace ECommerce.Areas.Admin.Controllers
 
             return View(product);
         }
+        // ============================================================
+        // 🚚 CONFIGURACIÓN DE ENVÍO (GET) - Mostrar formulario
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> ConfigShipping()
+        {
+            // Buscamos la configuración en la tabla AppSettings
+            var setting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+            
+            // Si existe, mostramos el valor. Si no, mostramos "6.00" por defecto.
+            ViewBag.CurrentCost = setting != null ? setting.Value : "6.00";
+            
+            return View();
+        }
+
+        // ============================================================
+        // 🚚 CONFIGURACIÓN DE ENVÍO (POST) - Guardar cambios
+        // ============================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfigShipping(decimal newCost)
+        {
+            var setting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+
+            if (setting == null)
+            {
+                // Si no existía, lo creamos
+                setting = new AppSetting { Key = "ShippingCost", Value = newCost.ToString() };
+                _db.AppSettings.Add(setting);
+            }
+            else
+            {
+                // Si ya existe, lo actualizamos
+                setting.Value = newCost.ToString();
+                _db.AppSettings.Update(setting);
+            }
+
+            await _db.SaveChangesAsync();
+            
+            // Usamos TempData para mostrar un mensaje de éxito
+            TempData["SuccessMessage"] = $"¡Costo de envío actualizado a S/ {newCost:0.00}!";
+            
+            return RedirectToAction("Index");
+        }
     }
 }
