@@ -1,16 +1,20 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace ECommerce.Models // Asegúrate que el namespace coincida con tu proyecto
+namespace ECommerce.Models
 {
     public class DeliveryInfoViewModel
     {
-        // Estos campos son obligatorios solo si eligen envío a domicilio
+        // --- DATOS DEL DESTINATARIO ---
+
         [Display(Name = "Nombre Completo")]
         public string FullName { get; set; }
 
         [Display(Name = "Dirección de Entrega")]
         public string Address { get; set; }
+
+        [Display(Name = "Código Postal")]
+        public string PostalCode { get; set; } // ✅ Nuevo Campo
 
         [Display(Name = "Ciudad")]
         public string City { get; set; }
@@ -19,13 +23,16 @@ namespace ECommerce.Models // Asegúrate que el namespace coincida con tu proyec
         [Phone]
         public string PhoneNumber { get; set; }
 
+        // --- OPCIONAL ---
         [Display(Name = "Instrucciones Especiales")]
-        public string SpecialInstructions { get; set; }
+        public string? SpecialInstructions { get; set; } // ✅ Marcado como opcional (?)
 
-        // Este campo lo calcularemos nosotros, el usuario solo lo ve
+        // --- DATOS DE LÓGICA ---
+        
+        // Fecha calculada (solo visualización)
         public string EstimatedDeliveryDate { get; set; } = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy");
         
-        // Para saber qué eligió el usuario (Domicilio o Tienda)
+        // "Home" o "Store"
         public string DeliveryMethod { get; set; } 
     }
 }

@@ -92,34 +92,40 @@
                                 
                                 <div class="mb-3">
                                     <label asp-for="FullName" class="form-label">Nombre Completo</label>
-                                    <input asp-for="FullName" class="form-control" placeholder="Quien recibe el pedido" required />
+                                    <input asp-for="FullName" class="form-control" placeholder="Quien recibe el pedido" />
                                     <span asp-validation-for="FullName" class="text-danger"></span>
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-8 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label asp-for="Address" class="form-label">Dirección de Entrega</label>
-                                        <input asp-for="Address" class="form-control" placeholder="Calle, Número, Referencia" required />
+                                        <input asp-for="Address" class="form-control" placeholder="Calle, Número, Referencia" />
                                         <span asp-validation-for="Address" class="text-danger"></span>
                                     </div>
-                                    <div class="col-md-4 mb-3">
+                                    <div class="col-md-3 mb-3">
+                                        <label asp-for="PostalCode" class="form-label">Código Postal</label>
+                                        <input asp-for="PostalCode" class="form-control" placeholder="Ej: 08001" />
+                                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
                                         <label asp-for="City" class="form-label">Ciudad</label>
-                                        <input asp-for="City" class="form-control" value="Cusco" required />
+                                        <input asp-for="City" class="form-control" value="Cusco" readonly />
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label asp-for="PhoneNumber" class="form-label">Teléfono / Celular</label>
-                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Para coordinar la entrega" required />
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Para coordinar la entrega" />
                                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                                 </div>
 
                                 <div class="mb-2">
                                     <label asp-for="SpecialInstructions" class="form-label">Instrucciones (Opcional)</label>
-                                    <textarea asp-for="SpecialInstructions" class="form-control" rows="2" placeholder="Ej: Dejar en recepción"></textarea>
+                                    <textarea asp-for="SpecialInstructions" id="SpecialInstructions" class="form-control" rows="2" placeholder="Ej: Dejar en recepción"></textarea>
                                 </div>
                             </div>
                         </div>
+
                         <div class="form-check p-3 rounded option-card" id="divStore" onclick="selectOption('Store')">
                             <input class="form-check-input" type="radio" asp-for="DeliveryMethod" id="methodStore" value="Store">
                             <label class="form-check-label w-100" style="cursor:pointer" for="methodStore">
@@ -193,16 +199,20 @@
 
     function toggleForm(type) {
         const formDiv = document.getElementById('shippingForm');
-        // Inputs que son requeridos dentro del form
-        const requiredInputs = formDiv.querySelectorAll('input[type="text"]');
+        // Inputs que son requeridos dentro del form (inputs y textareas)
+        const allInputs = formDiv.querySelectorAll('input, textarea');
 
         if (type === 'Home') {
             // Mostrar formulario
             formDiv.style.display = 'block';
             
-            // Hacer campos obligatorios
-            requiredInputs.forEach(input => {
-                if(input.id !== 'SpecialInstructions') input.required = true;
+            // Hacer campos obligatorios EXCEPTO Instrucciones
+            allInputs.forEach(input => {
+                if(input.id !== 'SpecialInstructions') {
+                    input.required = true;
+                } else {
+                    input.required = false; // Instrucciones siempre opcional
+                }
             });
 
         } else {
@@ -210,7 +220,7 @@
             formDiv.style.display = 'none';
             
             // Quitar obligatoriedad para poder enviar el form sin llenar esto
-            requiredInputs.forEach(input => input.required = false);
+            allInputs.forEach(input => input.required = false);
         }
     }
 

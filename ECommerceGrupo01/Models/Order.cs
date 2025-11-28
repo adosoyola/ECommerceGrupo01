@@ -46,7 +46,6 @@ namespace ECommerce.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // --- DATOS ECONÓMICOS ---
-        // Usamos decimal(18,2) para evitar errores de redondeo en SQL
         [Required]
         [DataType(DataType.Currency)]
         [Column(TypeName = "decimal(18,2)")] 
@@ -65,6 +64,9 @@ namespace ECommerce.Models
         [Display(Name = "Dirección de Entrega")]
         public string? ShippingAddress { get; set; }
 
+        [Display(Name = "Código Postal")]
+        public string? PostalCode { get; set; } // ✅ NUEVO CAMPO
+
         [Display(Name = "Ciudad")]
         public string? ShippingCity { get; set; }
 
@@ -78,8 +80,7 @@ namespace ECommerce.Models
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
 
-    // CLASE PARA CONFIGURACIONES (Precio de envío, etc.)
-    // Nota: Idealmente esto iría en su propio archivo, pero funciona aquí.
+    // CLASE PARA CONFIGURACIONES
     public class AppSetting
     {
         public int Id { get; set; }
