@@ -1,57 +1,49 @@
-// view_products.cy.js
+describe('Flujo de Carrito de Compras', () => {
+  const BASE_URL = 'http://localhost:5012';
 
-describe('Visualización de Productos', () => {
-  it('1. Debe cargar la página de productos y mostrar al menos un producto', () => {
-    // Paso 1: Navega a la página del listado de productos
-    cy.visit('http://localhost:5012/Products/Index');
+  it('1. Debe agregar, visualizar y luego eliminar un producto del carrito', () => {
+      
+      // --- 1. Agregar Producto desde la lista (Index) ---
+      cy.log('Paso 1: Agregando un producto al carrito desde la página de Índice.');
+      cy.visit(`${BASE_URL}/Products/Index`);
+      cy.url().should('eq', `${BASE_URL}/Products/Index`);
 
-    // Verificación 1: Asegurarse de que la URL es la correcta
-    cy.url().should('eq', 'http://localhost:5012/Products/Index');
+      // Encontramos el primer producto y hacemos clic en su botón de "Agregar"
+      cy.get('.card').first().within(() => {
+          // Buscamos el formulario de adición y lo enviamos
+          cy.get('form').submit();
+      });
+      
+      // --- 2. Verificar que estamos en la página del Carrito ---
+      // 🚨 CORRECCIÓN ANTERIOR: La ruta se corrigió a '/Cart'
+      cy.url().should('include', '/Cart'); 
+      
+      // Verificamos que al menos un elemento está en el carrito
+      cy.get('.cart-items-list, tbody tr').should('have.length.at.least', 1);
+      
+      // --- 3. Eliminar el Producto del Carrito ---
+      cy.log('Paso 2: Eliminando el producto del carrito.');
 
-    // Verificación 2: Validar que se muestra al menos un producto
-    // Buscamos un contenedor de producto, que según tu código es una "card".
-    cy.get('.card').should('have.length.at.least', 1);
+      // Buscamos el botón de eliminar asociado a ese ítem y hacemos clic
+      cy.get('.cart-items-list, tbody tr').first().within(() => {
+          cy.get('form[action*="/Cart/Remove"] button[type="submit"], button:contains("Eliminar")').click();
+      });
+      
+      // --- 4. Verificar que el carrito está vacío ---
+      cy.url().should('include', '/Cart');
 
-    // Verificación 3: Dentro del primer producto, verificar que tiene un título, una imagen y un precio
-    // Basado en la estructura de tu Index.cshtml, estos son los selectores correctos.
-    cy.get('.card').first().within(() => {
-      // Confirma que la imagen del producto existe
-      cy.get('img').should('be.visible');
-      // Confirma que el título del producto no está vacío
-      cy.get('.card-title').should('not.be.empty');
-      // Confirma que el precio del producto no está vacío
-      cy.get('.card-text').should('not.be.empty');
-      // Confirma que el botón de "Agregar" existe
-      cy.get('button[type="submit"]').should('contain', 'Agregar');
-    });
+      // 🚨 MEJORA CLAVE 1: Verificamos primero que la lista de ítems haya desaparecido.
+      cy.get('.cart-items-list, tbody tr').should('not.exist'); 
+      
+      // 🚨 MEJORA CLAVE 2: Ampliamos los selectores (h1, h2, h3) y la regex.
+      // Buscamos el mensaje de carrito vacío, usando una expresión regular
+      // que es insensible a mayúsculas/minúsculas y cubre más opciones de texto.
+      cy.contains(
+          'h1, h2, h3, h4, p, div', 
+          /carrito.*vacío|empty cart|no hay productos|no tienes artículos/i, 
+          { timeout: 5000 }
+      ).should('be.visible');
+      
+      cy.log('✅ Prueba de Agregar/Eliminar del Carrito completada exitosamente.');
   });
 });
-
-
-/*
-// visual_error_test.cy.js
-
-describe('Pruebas de Errores Visuales', () => {
-
-  it('1. Debe mostrar la página de error al intentar ver un producto inexistente', () => {
-    // Definimos un ID que sabemos que no existe en tu base de datos.
-    const nonExistentProductId = 999999;
-
-    // Paso 1: Intentamos visitar la URL del producto inexistente.
-    // Usamos { failOnStatusCode: false } para que Cypress no falle automáticamente
-    // cuando reciba la respuesta 404 del servidor.
-    cy.visit(`/Products/Details/${nonExistentProductId}`, { failOnStatusCode: false });
-
-    // Verificación 1: Aseguramos que la URL redirige a la página de error o muestra la ruta del producto.
-    // Esto demuestra que la solicitud fue enviada correctamente.
-    cy.url().should('include', `/Products/Details/${nonExistentProductId}`);
-
-    // Verificación 2: Buscamos un texto de la página de error.
-    // Según tu archivo Error.cshtml, el título es "Error.".
-    cy.contains('h1', 'Error.').should('be.visible');
-
-    // Opcional: Busca el mensaje de error para más seguridad
-    cy.contains('h2', 'An error occurred while processing your request.').should('be.visible');
-  });
-});
-*/
