@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System;
+using Microsoft.AspNetCore.Http; // Necesario para Session
 
 namespace ECommerce.Controllers
 {
@@ -50,7 +51,7 @@ namespace ECommerce.Controllers
 
         // --- VISTAS DE PROCESO DE COMPRA ---
 
-        // 1. CONFIRMAR (GET)
+        // 1. CONFIRMAR (GET) - Muestra el formulario
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> Confirm()
@@ -64,27 +65,64 @@ namespace ECommerce.Controllers
 
             // Obtener costo de envío de la BD
             var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
-            
-            // Si existe lo usamos, si no, usamos 6.00 por defecto
             decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
             
+            // Pasamos datos a la Vista
             ViewBag.ShippingCost = shippingCost;
+            ViewBag.CartItems = cart; // IMPORTANTE: Para que el resumen de productos funcione
 
-            return View(cart);
+            // Modelo inicial para el formulario
+            var model = new DeliveryInfoViewModel
+            {
+                EstimatedDeliveryDate = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy"),
+                DeliveryMethod = "Home", // Por defecto
+                City = "Cusco"
+            };
+
+            return View(model);
         }
 
-        // 2. PROCESAR CONFIRMACIÓN (POST) -> ¡AQUÍ ESTABA EL ERROR 404!
-        // Este es el método que faltaba o estaba mal escrito
+        // 2. PROCESAR DATOS DE ENVÍO (POST) - Recibe el formulario
         [Authorize]
         [HttpPost]
-        public IActionResult ProcessConfirm(string deliveryMethod)
+        public async Task<IActionResult> Payment(DeliveryInfoViewModel info)
         {
-            // Guardamos la elección en TempData
-            TempData["DeliveryMethod"] = deliveryMethod;
-            TempData.Keep("DeliveryMethod"); // Mantener para la siguiente petición
-            
-            // Redirigimos a la simulación de pago
-            return RedirectToAction("PaymentSimulation");
+            var cart = GetCart(); // Recuperamos carrito para validar
+
+            if (ModelState.IsValid)
+            {
+                // A. GUARDAR DATOS EN SESIÓN
+                // Guardamos esto temporalmente para usarlo en el paso final (PaymentSimulation)
+                HttpContext.Session.SetString("DeliveryMethod", info.DeliveryMethod);
+
+                if (info.DeliveryMethod == "Home")
+                {
+                    HttpContext.Session.SetString("ShipName", info.FullName ?? "");
+                    HttpContext.Session.SetString("ShipAddress", info.Address ?? "");
+                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? "");
+                    HttpContext.Session.SetString("ShipNotes", info.SpecialInstructions ?? "");
+                }
+                else
+                {
+                    // Limpiamos datos si es tienda
+                    HttpContext.Session.SetString("ShipName", "Cliente en Tienda");
+                    HttpContext.Session.SetString("ShipAddress", "RECOJO EN TIENDA");
+                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? ""); // Aún guardamos el teléfono
+                }
+
+                // Redirigir a la simulación de pago
+                return RedirectToAction("PaymentSimulation");
+            }
+
+            // B. SI HAY ERRORES (ej: faltó dirección)
+            // Recargamos los datos necesarios para que la vista no falle
+            var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+            decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
+
+            ViewBag.ShippingCost = shippingCost;
+            ViewBag.CartItems = cart; 
+
+            return View("Confirm", info);
         }
 
         // 3. SIMULACIÓN DE PAGO (GET)
@@ -95,20 +133,18 @@ namespace ECommerce.Controllers
             var cartItems = GetCartItems();
             if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
 
-            // Recuperar elección
-            string methodString = TempData["DeliveryMethod"]?.ToString() ?? "HomeDelivery";
-            TempData.Keep("DeliveryMethod"); 
-
+            // Recuperar elección de SESIÓN (Más seguro que TempData)
+            string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
+            
             // Calcular Costos
             decimal subtotal = cartItems.Sum(x => x.UnitPrice * x.Quantity);
             decimal shippingCost = 0;
 
-            // Obtener precio actualizado de la BD
             var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
             decimal dbShippingPrice = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
 
             // Solo cobramos si es envío a domicilio
-            if (methodString == "HomeDelivery")
+            if (methodString == "Home")
             {
                 shippingCost = dbShippingPrice;
             }
@@ -118,10 +154,13 @@ namespace ECommerce.Controllers
             ViewBag.Total = subtotal + shippingCost;
             ViewBag.DeliveryMethod = methodString;
 
+            // Pasamos datos de envío para mostrarlos en el resumen (Opcional)
+            ViewBag.ShipAddress = HttpContext.Session.GetString("ShipAddress");
+
             return View(cartItems);
         }
 
-        // 4. PROCESAR PAGO (POST)
+        // 4. PROCESAR PAGO Y CREAR ORDEN (POST)
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -130,11 +169,7 @@ namespace ECommerce.Controllers
             try
             {
                 var userId = _userManager.GetUserId(User);
-                if (userId == null)
-                {
-                    TempData["Error"] = "Usuario no encontrado.";
-                    return RedirectToAction("Login", "Account", new { area = "Identity" });
-                }
+                if (userId == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
 
                 var user = await _userManager.FindByIdAsync(userId);
                 var cart = GetCart();
@@ -145,9 +180,15 @@ namespace ECommerce.Controllers
                     return RedirectToAction("Index", "Cart");
                 }
 
-                // A. RECUPERAR MÉTODO DE ENTREGA Y COSTO
-                string methodString = TempData["DeliveryMethod"]?.ToString() ?? "HomeDelivery";
-                var method = methodString == "StorePickup" ? DeliveryMethod.StorePickup : DeliveryMethod.HomeDelivery;
+                // A. RECUPERAR DATOS DE SESIÓN
+                string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
+                var method = methodString == "Store" ? DeliveryMethod.StorePickup : DeliveryMethod.HomeDelivery;
+                
+                // Datos extras del formulario
+                string shipAddress = HttpContext.Session.GetString("ShipAddress") ?? "Dirección no especificada";
+                string shipPhone = HttpContext.Session.GetString("ShipPhone") ?? "";
+                string shipNotes = HttpContext.Session.GetString("ShipNotes") ?? "";
+                string shipName = HttpContext.Session.GetString("ShipName") ?? user.UserName;
 
                 decimal subtotal = cart.Sum(x => x.UnitPrice * x.Quantity);
                 decimal shippingCost = 0;
@@ -172,6 +213,11 @@ namespace ECommerce.Controllers
                 if (errors.Any())
                 {
                     TempData["Error"] = string.Join("\n", errors);
+                    
+                    // Recargar ViewBag para la vista de error
+                    ViewBag.Subtotal = subtotal;
+                    ViewBag.ShippingCost = shippingCost;
+                    ViewBag.Total = subtotal + shippingCost;
                     return View("PaymentSimulation", cart);
                 }
 
@@ -182,23 +228,22 @@ namespace ECommerce.Controllers
                 if (!paymentResult.IsSuccess)
                 {
                     TempData["Error"] = $"Error de pago: {paymentResult.Message}";
-                    // Importante: Volver a cargar ViewBag para que no explote la vista al volver
                     ViewBag.Subtotal = subtotal;
                     ViewBag.ShippingCost = shippingCost;
                     ViewBag.Total = subtotal + shippingCost;
-                    ViewBag.DeliveryMethod = methodString;
                     return View("PaymentSimulation", cart);
                 }
 
-                // D. CREAR ORDEN
+                // D. CREAR ORDEN EN BASE DE DATOS
                 var order = new Order
                 {
                     UserId = userId,
-                    Total = subtotal + shippingCost, // Total final
-                    ShippingCost = shippingCost,     // Guardar costo envío
+                    Total = subtotal + shippingCost,
+                    ShippingCost = shippingCost,
                     Status = OrderStatus.EnPreparacion,
-                    DeliveryMethod = method,         // Guardar método
+                    DeliveryMethod = method,
                     CreatedAt = DateTime.Now,
+                    // NOTA: Si quisieras guardar dirección en BD, aquí asignarías: order.Address = shipAddress;
                     Items = cart.Select(ci => new OrderItem
                     {
                         ProductId = ci.ProductId,
@@ -218,18 +263,40 @@ namespace ECommerce.Controllers
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
 
-                // F. LIMPIAR CARRITO
+                // F. LIMPIAR CARRITO Y SESIÓN
                 SaveCart(new List<CartItem>());
+                HttpContext.Session.Remove("DeliveryMethod"); // Limpieza
 
-                // G. ENVIAR CORREO (Intento seguro)
+                // G. ENVIAR CORREO CON DETALLES
                 try 
                 {
                     var email = user.Email;
                     string subject = $"Confirmación de Pedido #{order.Id} - SystemCusco";
                     
-                    string infoEntrega = method == DeliveryMethod.HomeDelivery 
-                        ? $"<p style='color:#0d6efd;'><strong>🚚 Envío a Domicilio</strong> (Llega en 2 días)</p>"
-                        : $"<p style='color:#ffc107; color:#B38F00;'><strong>🏪 Recojo en Tienda</strong> (Av. La Cultura 123)</p>";
+                    // Construcción del HTML del correo con la info nueva
+                    string detallesEnvioHtml = "";
+                    
+                    if (method == DeliveryMethod.HomeDelivery)
+                    {
+                        detallesEnvioHtml = $@"
+                            <div style='background-color:#e7f1ff; padding:15px; border-radius:5px; margin-bottom:15px;'>
+                                <h3 style='color:#0d6efd; margin-top:0;'>🚚 Envío a Domicilio</h3>
+                                <p><strong>Destinatario:</strong> {shipName}</p>
+                                <p><strong>Dirección:</strong> {shipAddress}</p>
+                                <p><strong>Teléfono:</strong> {shipPhone}</p>
+                                <p><strong>Notas:</strong> {shipNotes}</p>
+                            </div>";
+                    }
+                    else
+                    {
+                        detallesEnvioHtml = $@"
+                            <div style='background-color:#e8f5e9; padding:15px; border-radius:5px; margin-bottom:15px;'>
+                                <h3 style='color:#198754; margin-top:0;'>🏪 Recojo en Tienda</h3>
+                                <p><strong>Titular:</strong> {user.UserName}</p>
+                                <p><strong>Lugar:</strong> Av. La Cultura 123, Cusco</p>
+                                <p><strong>Horario:</strong> Lunes a Viernes 9am - 6pm</p>
+                            </div>";
+                    }
 
                     string productRows = string.Join("", order.Items.Select(i => $@"
                         <tr>
@@ -244,9 +311,11 @@ namespace ECommerce.Controllers
                                 <h2>¡Gracias por tu compra!</h2>
                             </div>
                             <div style='padding: 20px;'>
-                                <p>Hola <strong>{user.UserName}</strong>,</p>
-                                <p>Hemos recibido tu pedido correctamente.</p>
-                                {infoEntrega}
+                                <p>Hola,</p>
+                                <p>Tu pedido ha sido confirmado.</p>
+                                
+                                {detallesEnvioHtml}
+
                                 <table style='width:100%; border-collapse:collapse; margin-top:15px;'>
                                     <thead>
                                         <tr style='background-color:#f9f9f9;'>
@@ -283,6 +352,8 @@ namespace ECommerce.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = $"Ocurrió un error inesperado: {ex.Message}";
+                // Recargar datos para la vista en caso de crash
+                ViewBag.Subtotal = 0; // Valor seguro
                 return View("PaymentSimulation", GetCart());
             }
         }

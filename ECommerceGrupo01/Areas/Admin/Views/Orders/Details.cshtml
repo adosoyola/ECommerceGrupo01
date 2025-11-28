@@ -10,17 +10,18 @@
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h3 mb-0 text-gray-800">📦 Detalle de Orden #@Model.Id</h2>
+        <div>
+            <h2 class="h3 mb-0 text-gray-800">📦 Detalle de Orden #@Model.Id</h2>
+            <p class="text-muted mb-0">Realizado el: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
         <a asp-action="Index" class="btn btn-secondary shadow-sm">
             <i class="bi bi-arrow-left"></i> Volver a la lista
         </a>
     </div>
 
     <div class="row">
-        <!-- COLUMNA IZQUIERDA: Detalles -->
         <div class="col-lg-8">
             
-            <!-- Tarjeta de Productos -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-primary text-white">
                     <h6 class="m-0 fw-bold"><i class="bi bi-cart4"></i> Productos Comprados</h6>
@@ -40,7 +41,9 @@
                                 @foreach (var item in Model.Items)
                                 {
                                     <tr>
-                                        <td>@(item.Product?.Name ?? item.ProductName)</td>
+                                        <td>
+                                            <span class="fw-bold">@(item.Product?.Name ?? item.ProductName)</span>
+                                        </td>
                                         <td class="text-center">@item.Quantity</td>
                                         <td class="text-end">@item.UnitPrice.ToString("C", culture)</td>
                                         <td class="text-end">@((item.Quantity * item.UnitPrice).ToString("C", culture))</td>
@@ -48,17 +51,20 @@
                                 }
                             </tbody>
                             <tfoot>
-                                <tr class="fw-bold">
+                                <tr>
                                     <td colspan="3" class="text-end">Subtotal Productos:</td>
                                     <td class="text-end">@((Model.Total - Model.ShippingCost).ToString("C", culture))</td>
                                 </tr>
-                                @if (Model.ShippingCost > 0)
-                                {
-                                    <tr class="text-danger fw-bold">
-                                        <td colspan="3" class="text-end">+ Costo de Envío:</td>
-                                        <td class="text-end">@Model.ShippingCost.ToString("C", culture)</td>
-                                    </tr>
-                                }
+                                
+                                <tr>
+                                    <td colspan="3" class="text-end @(Model.ShippingCost > 0 ? "text-danger fw-bold" : "text-success")">
+                                        @(Model.ShippingCost > 0 ? "+ Costo de Envío:" : "Envío:")
+                                    </td>
+                                    <td class="text-end @(Model.ShippingCost > 0 ? "text-danger fw-bold" : "text-success")">
+                                        @(Model.ShippingCost > 0 ? Model.ShippingCost.ToString("C", culture) : "GRATIS")
+                                    </td>
+                                </tr>
+                                
                                 <tr class="bg-success text-white fw-bold fs-5">
                                     <td colspan="3" class="text-end">TOTAL COBRADO:</td>
                                     <td class="text-end">@Model.Total.ToString("C", culture)</td>
@@ -69,34 +75,50 @@
                 </div>
             </div>
 
-            <!-- Tarjeta de Información de Entrega (NUEVO) -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3 @(Model.DeliveryMethod == DeliveryMethod.HomeDelivery ? "bg-info text-white" : "bg-warning text-dark")">
                     <h6 class="m-0 fw-bold">
                         <i class="bi @(Model.DeliveryMethod == DeliveryMethod.HomeDelivery ? "bi-truck" : "bi-shop")"></i>
-                        Método de Entrega: @(Model.DeliveryMethod == DeliveryMethod.HomeDelivery ? "ENVÍO A DOMICILIO" : "RECOJO EN TIENDA")
+                        Método: @(Model.DeliveryMethod == DeliveryMethod.HomeDelivery ? "ENVÍO A DOMICILIO" : "RECOJO EN TIENDA")
                     </h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Cliente:</strong> @(Model.User?.UserName ?? "Usuario eliminado")</p>
-                            <p><strong>Email:</strong> @(Model.User?.Email ?? "-")</p>
+                        <div class="col-md-6 border-end">
+                            <h6 class="text-primary fw-bold mb-3">👤 Datos de Cuenta</h6>
+                            <p class="mb-1"><strong>Usuario:</strong> @(Model.User?.UserName ?? "Usuario eliminado")</p>
+                            <p class="mb-0"><strong>Email:</strong> @(Model.User?.Email ?? "-")</p>
                         </div>
-                        <div class="col-md-6">
+
+                        <div class="col-md-6 ps-4">
+                            <h6 class="text-primary fw-bold mb-3">📍 Datos de Entrega</h6>
+                            
+                            <p class="mb-1"><strong>Destinatario:</strong> @(Model.RecipientName ?? "No especificado")</p>
+                            
                             @if (Model.DeliveryMethod == DeliveryMethod.HomeDelivery)
                             {
-                                <div class="alert alert-light border-info">
-                                    <h5 class="alert-heading text-info"><i class="bi bi-geo-alt-fill"></i> Dirección de Envío</h5>
-                                    <p class="mb-0">El cliente espera el producto en su domicilio.</p>
-                                    <small class="text-muted">(Aquí podrías mostrar la dirección si la guardáramos en el futuro)</small>
+                                <div class="p-2 bg-light rounded border mb-2">
+                                    <p class="mb-1"><strong>Dirección:</strong> @Model.ShippingAddress</p>
+                                    <p class="mb-0"><strong>Ciudad:</strong> @Model.ShippingCity</p>
                                 </div>
+                                
+                                <p class="mb-1">
+                                    <strong>Teléfono:</strong> 
+                                    <a href="tel:@Model.ContactPhone" class="text-decoration-none">@Model.ContactPhone</a>
+                                </p>
+
+                                @if (!string.IsNullOrEmpty(Model.SpecialInstructions))
+                                {
+                                    <div class="alert alert-warning mt-2 mb-0 py-2">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Nota:</strong> @Model.SpecialInstructions
+                                    </div>
+                                }
                             }
                             else
                             {
-                                <div class="alert alert-light border-warning">
-                                    <h5 class="alert-heading text-warning"><i class="bi bi-person-raised-hand"></i> Cliente Recoge</h5>
-                                    <p class="mb-0">El cliente vendrá a la tienda a recoger el pedido.</p>
+                                <div class="alert alert-success mb-0">
+                                    <i class="bi bi-shop"></i> <strong>El cliente recogerá en tienda.</strong><br>
+                                    <small>Dirección: Av. La Cultura 123, Cusco.</small>
                                 </div>
                             }
                         </div>
@@ -106,17 +128,15 @@
 
         </div>
 
-        <!-- COLUMNA DERECHA: Acciones -->
         <div class="col-lg-4">
             
-            <!-- Cambiar Estado -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-dark text-white">
                     <h6 class="m-0 fw-bold"><i class="bi bi-gear-fill"></i> Gestión de Estado</h6>
                 </div>
                 <div class="card-body">
-                    <div class="text-center mb-3">
-                        <p>Estado Actual:</p>
+                    <div class="text-center mb-4">
+                        <p class="mb-2 text-muted">Estado Actual:</p>
                         @{
                             var badgeClass = Model.Status switch {
                                 OrderStatus.Pendiente => "bg-secondary",
@@ -128,55 +148,48 @@
                                 _ => "bg-light text-dark"
                             };
                         }
-                        <span class="badge @badgeClass fs-4 p-2">@Model.Status</span>
+                        <span class="badge @badgeClass fs-2 px-4 py-2 rounded-pill shadow-sm">@Model.Status</span>
                     </div>
 
                     <hr>
 
                     <form asp-action="UpdateStatus" method="post">
-    <input type="hidden" name="id" value="@Model.Id" />
-    
-    <label class="form-label fw-bold">Cambiar a:</label>
-    <select name="newStatus" class="form-select mb-3 form-select-lg">
-        
-        <option value="Pendiente" selected="@(Model.Status == OrderStatus.Pendiente)">
-            🕒 Pendiente
-        </option>
-        
-        <option value="EnPreparacion" selected="@(Model.Status == OrderStatus.EnPreparacion)">
-            ⚙️ En Preparación
-        </option>
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        
+                        <label class="form-label fw-bold">Actualizar a:</label>
+                        <select name="newStatus" class="form-select mb-3 form-select-lg border-primary">
+                            
+                            <option value="Pendiente" selected="@(Model.Status == OrderStatus.Pendiente)">🕒 Pendiente</option>
+                            
+                            <option value="EnPreparacion" selected="@(Model.Status == OrderStatus.EnPreparacion)">⚙️ En Preparación</option>
 
-        <option value="EnTransito" selected="@(Model.Status == OrderStatus.EnTransito)">
-            🚚 En Tránsito (Salió a Reparto)
-        </option>
+                            <option value="EnTransito" selected="@(Model.Status == OrderStatus.EnTransito)">🚚 En Tránsito (Reparto)</option>
 
-        <option value="ListoParaRecoger" selected="@(Model.Status == OrderStatus.ListoParaRecoger)">
-            🏪 Listo para Recogerse (En Tienda)
-        </option>
+                            <option value="ListoParaRecoger" selected="@(Model.Status == OrderStatus.ListoParaRecoger)">🏪 Listo en Tienda</option>
 
-        <option value="Entregado" selected="@(Model.Status == OrderStatus.Entregado)">
-            ✅ Entregado / Finalizado
-        </option>
-        
-        <option value="Cancelado" selected="@(Model.Status == OrderStatus.Cancelado)">
-            ❌ Cancelado
-        </option>
-    </select>
+                            <option value="Entregado" selected="@(Model.Status == OrderStatus.Entregado)">✅ Entregado</option>
+                            
+                            <option value="Cancelado" selected="@(Model.Status == OrderStatus.Cancelado)">❌ Cancelado</option>
+                        </select>
 
-    <button type="submit" class="btn btn-success w-100 btn-lg">
-        <i class="bi bi-check-lg"></i> Actualizar Estado
-    </button>
-</form>
+                        <button type="submit" class="btn btn-success w-100 btn-lg shadow-sm">
+                            <i class="bi bi-save"></i> Guardar Cambios
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <!-- Acciones Extra -->
             <div class="card shadow">
+                <div class="card-header py-3 bg-secondary text-white">
+                    <h6 class="m-0 fw-bold"><i class="bi bi-printer"></i> Documentos</h6>
+                </div>
                 <div class="card-body d-grid gap-2">
-                    <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-danger">
-                        <i class="bi bi-file-earmark-pdf"></i> Ver Factura PDF
+                    <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-danger btn-lg">
+                        <i class="bi bi-file-earmark-pdf-fill"></i> Descargar Factura PDF
                     </a>
+                    <button onclick="window.print()" class="btn btn-outline-dark">
+                        <i class="bi bi-printer-fill"></i> Imprimir Pantalla
+                    </button>
                 </div>
             </div>
 

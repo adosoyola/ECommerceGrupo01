@@ -1,25 +1,41 @@
-@model List<ECommerce.Models.CartItem>
+@using ECommerce.Models
+@model DeliveryInfoViewModel
+
 @{
     ViewData["Title"] = "Confirmar Compra";
-    decimal subtotal = Model.Sum(x => x.UnitPrice * x.Quantity);
     
-    // ✅ CORRECCIÓN: Si ViewBag.ShippingCost es nulo, usa 6.00 por defecto para no romper la página
-    decimal costoEnvio = (ViewBag.ShippingCost as decimal?) ?? 6.00m; 
+    // Recuperamos la lista de productos del ViewBag
+    var cartItems = ViewBag.CartItems as List<CartItem>;
+    
+    // Calculamos subtotal
+    decimal subtotal = cartItems.Sum(x => x.UnitPrice * x.Quantity);
+    decimal costoEnvio = (ViewBag.ShippingCost as decimal?) ?? 6.00m;
     
     var culture = new System.Globalization.CultureInfo("es-PE");
 }
 
 <style>
-    .option-card { cursor: pointer; transition: all 0.2s; }
+    .option-card { cursor: pointer; transition: all 0.2s; border: 2px solid #dee2e6; }
     .option-card:hover { border-color: #0d6efd; background-color: #f8f9fa; }
-    .option-card.selected-option { border-color: #0d6efd; background-color: #e7f1ff; }
-    .option-card.selected-store { border-color: #198754; background-color: #e8f5e9; }
+    
+    /* Clases para estados seleccionados */
+    .option-card.selected-option { border-color: #0d6efd; background-color: #e7f1ff; position: relative; }
+    .option-card.selected-option::after { content: '✔'; position: absolute; top: 10px; right: 10px; color: #0d6efd; font-weight: bold; }
+
+    .option-card.selected-store { border-color: #198754; background-color: #e8f5e9; position: relative; }
+    .option-card.selected-store::after { content: '✔'; position: absolute; top: 10px; right: 10px; color: #198754; font-weight: bold; }
+    
+    /* Animación para el formulario */
+    #shippingForm { transition: all 0.3s ease-in-out; }
 </style>
 
 <div class="container mt-4">
     <h2 class="fw-bold text-success text-center mb-4">✅ Confirmar Compra</h2>
 
-    <form asp-action="ProcessConfirm" method="post">
+    <form asp-action="Payment" method="post" id="checkoutForm">
+        
+        <input type="hidden" asp-for="EstimatedDeliveryDate" />
+
         <div class="row">
             
             <div class="col-md-8">
@@ -38,7 +54,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @foreach (var item in Model)
+                            @foreach (var item in cartItems)
                             {
                                 <tr>
                                     <td>@item.Name</td>
@@ -57,22 +73,56 @@
                     </div>
                     <div class="card-body">
                         
-                        <div class="form-check p-3 border rounded mb-3 option-card selected-option" id="divHome" onclick="selectOption('Home')">
-                            <input class="form-check-input" type="radio" name="deliveryMethod" id="methodHome" value="HomeDelivery" checked>
-                            <label class="form-check-label w-100" style="cursor:pointer">
+                        <div class="form-check p-3 rounded mb-3 option-card selected-option" id="divHome" onclick="selectOption('Home')">
+                            <input class="form-check-input" type="radio" asp-for="DeliveryMethod" id="methodHome" value="Home" checked>
+                            <label class="form-check-label w-100" style="cursor:pointer" for="methodHome">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="fw-bold fs-5">🚚 Envío a Domicilio</span>
-                                        <div class="text-muted small mt-1">Llega en un plazo máximo de 2 días hábiles.</div>
+                                        <div class="text-muted small mt-1">Llega el: @Model.EstimatedDeliveryDate</div>
                                     </div>
                                     <span class="badge bg-primary fs-6">+ @costoEnvio.ToString("C", culture)</span>
                                 </div>
                             </label>
                         </div>
 
-                        <div class="form-check p-3 border rounded option-card" id="divStore" onclick="selectOption('Store')">
-                            <input class="form-check-input" type="radio" name="deliveryMethod" id="methodStore" value="StorePickup">
-                            <label class="form-check-label w-100" style="cursor:pointer">
+                        <div id="shippingForm" class="card bg-light border-primary mb-3 ms-3 me-3">
+                            <div class="card-body">
+                                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-person-lines-fill"></i> Datos del Destinatario</h6>
+                                
+                                <div class="mb-3">
+                                    <label asp-for="FullName" class="form-label">Nombre Completo</label>
+                                    <input asp-for="FullName" class="form-control" placeholder="Quien recibe el pedido" required />
+                                    <span asp-validation-for="FullName" class="text-danger"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label asp-for="Address" class="form-label">Dirección de Entrega</label>
+                                        <input asp-for="Address" class="form-control" placeholder="Calle, Número, Referencia" required />
+                                        <span asp-validation-for="Address" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="City" class="form-label">Ciudad</label>
+                                        <input asp-for="City" class="form-control" value="Cusco" required />
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label">Teléfono / Celular</label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Para coordinar la entrega" required />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label asp-for="SpecialInstructions" class="form-label">Instrucciones (Opcional)</label>
+                                    <textarea asp-for="SpecialInstructions" class="form-control" rows="2" placeholder="Ej: Dejar en recepción"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-check p-3 rounded option-card" id="divStore" onclick="selectOption('Store')">
+                            <input class="form-check-input" type="radio" asp-for="DeliveryMethod" id="methodStore" value="Store">
+                            <label class="form-check-label w-100" style="cursor:pointer" for="methodStore">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="fw-bold fs-5 text-success">🏪 Recojo en Tienda</span>
@@ -129,36 +179,77 @@
     const shippingCost = @costoEnvio;
 
     function selectOption(type) {
-        // Marcar el radio button correspondiente
+        // 1. Marcar el radio button
         if (type === 'Home') {
             document.getElementById('methodHome').checked = true;
         } else {
             document.getElementById('methodStore').checked = true;
         }
+        
+        // 2. Ejecutar lógica visual y de cálculo
         updateTotal();
+        toggleForm(type);
+    }
+
+    function toggleForm(type) {
+        const formDiv = document.getElementById('shippingForm');
+        // Inputs que son requeridos dentro del form
+        const requiredInputs = formDiv.querySelectorAll('input[type="text"]');
+
+        if (type === 'Home') {
+            // Mostrar formulario
+            formDiv.style.display = 'block';
+            
+            // Hacer campos obligatorios
+            requiredInputs.forEach(input => {
+                if(input.id !== 'SpecialInstructions') input.required = true;
+            });
+
+        } else {
+            // Ocultar formulario
+            formDiv.style.display = 'none';
+            
+            // Quitar obligatoriedad para poder enviar el form sin llenar esto
+            requiredInputs.forEach(input => input.required = false);
+        }
     }
 
     function updateTotal() {
         const isHome = document.getElementById('methodHome').checked;
         
-        // Actualizar estilos visuales
         const divHome = document.getElementById('divHome');
         const divStore = document.getElementById('divStore');
         
         if (isHome) {
+            // Estilos
             divHome.classList.add('selected-option');
             divStore.classList.remove('selected-store');
             
-            // Actualizar montos
+            // Cálculos
             document.getElementById('displayShipping').innerHTML = "S/ " + shippingCost.toFixed(2);
             document.getElementById('displayTotal').innerHTML = "S/ " + (subtotal + shippingCost).toFixed(2);
         } else {
+            // Estilos
             divHome.classList.remove('selected-option');
             divStore.classList.add('selected-store');
             
-            // Actualizar montos (Envío 0)
+            // Cálculos
             document.getElementById('displayShipping').innerHTML = "S/ 0.00";
             document.getElementById('displayTotal').innerHTML = "S/ " + subtotal.toFixed(2);
         }
     }
+
+    // Ejecutar al inicio para asegurar estado correcto
+    document.addEventListener("DOMContentLoaded", function() {
+        // Verifica cual está marcado al cargar
+        if(document.getElementById('methodHome').checked) {
+            selectOption('Home');
+        } else {
+            selectOption('Store');
+        }
+    });
 </script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
