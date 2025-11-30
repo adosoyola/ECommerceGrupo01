@@ -1,77 +1,198 @@
+@using ECommerce.Models
 @model ECommerce.Models.Order
 @using System.Globalization
-@using ECommerce.Models
 
 @{
-    ViewData["Title"] = $"Detalle del Pedido #{Model.Id}";
+    ViewData["Title"] = $"Pedido #{Model.Id}";
     var culture = new CultureInfo("es-PE");
 }
 
-<div class="container mt-4">
+<div class="container mt-5 mb-5">
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Detalle del Pedido #@Model.Id</h1>
-        <a asp-action="History" class="btn btn-secondary">⬅ Volver al Historial</a>
+        <div>
+            <h2 class="fw-bold text-success">✅ Tu Pedido #@Model.Id</h2>
+            <p class="text-muted">Realizado el: @Model.CreatedAt.ToString("dd MMMM yyyy, hh:mm tt", culture)</p>
+        </div>
+        <a asp-action="History" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left"></i> Mis Pedidos
+        </a>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            Información del Pedido
-        </div>
-        <div class="card-body row">
-            <div class="col-md-6">
-                <p><strong>Fecha de Pedido:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
-                <p><strong>Total Pagado:</strong> <span class="fw-bold text-success">@Model.Total.ToString("C",
-                                                culture)</span></p>
-            </div>
-            <div class="col-md-6 text-md-end">
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Estado del Pedido:</h5>
+            <div class="progress" style="height: 25px;">
                 @{
-                    var badgeClass = Model.Status switch
-                    {
-                        OrderStatus.Entregado => "bg-success",
-                        OrderStatus.EnTransito => "bg-primary",
-                        OrderStatus.EnPreparacion => "bg-warning text-dark",
-                        OrderStatus.Cancelado => "bg-danger",
-                        _ => "bg-secondary"
-                    };
-                }
-                <p><strong>Estado:</strong> <span class="badge @badgeClass fs-6">@Model.Status.ToString()</span></p>
+                    int progress = 0;
+                    string barColor = "bg-primary";
+                    string statusText = Model.Status.ToString();
 
-                <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank"
-                    class="btn btn-sm btn-danger d-block d-md-inline-block" title="Exportar factura como PDF">
-                    <i class="bi bi-file-earmark-pdf"></i> Exportar Factura
-                </a>
+                    switch (Model.Status)
+                    {
+                        case OrderStatus.Pendiente: progress = 10; break;
+                        case OrderStatus.EnPreparacion: progress = 40; break;
+                        case OrderStatus.EnTransito: progress = 70; barColor = "bg-info"; break;
+                        case OrderStatus.ListoParaRecoger: progress = 80; barColor = "bg-warning"; break;
+                        case OrderStatus.Entregado: progress = 100; barColor = "bg-success"; break;
+                        case OrderStatus.Cancelado: progress = 100; barColor = "bg-danger"; break;
+                    }
+                }
+                <div class="progress-bar @barColor progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: @progress%">
+                     @statusText
+                </div>
             </div>
         </div>
     </div>
 
-    <h2>Productos Comprados</h2>
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="table-primary">
-                <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Items)
-                {
-                    <tr>
-                        <td>@(item.Product?.Name ?? item.ProductName)</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.UnitPrice.ToString("C", culture)</td>
-                        <td>@((item.Quantity * item.UnitPrice).ToString("C", culture))</td>
-                    </tr>
-                }
-            </tbody>
-            <tfoot>
-                <tr class="fw-bold table-light">
-                    <td colspan="3" class="text-end">Total General:</td>
-                    <td>@Model.Total.ToString("C", culture)</td>
-                </tr>
-            </tfoot>
-        </table>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-geo-alt-fill"></i> Detalles de Entrega
+                    </h5>
+                </div>
+                <div class="card-body">
+                    
+                    @if (Model.DeliveryMethod == DeliveryMethod.HomeDelivery)
+                    {
+                        <div class="alert alert-light border-primary mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-truck fs-1 text-primary me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-0">Envío a Domicilio</h5>
+                                    <small class="text-muted">El paquete llegará a tu puerta.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Recibe:</span><br>
+                                <span class="fs-5">@Model.RecipientName</span>
+                            </li>
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Dirección:</span><br>
+                                <span class="fs-5"><i class="bi bi-house"></i> @Model.ShippingAddress</span>
+                                <br>
+                                <span class="badge bg-secondary">@Model.ShippingCity</span>
+                                @if(!string.IsNullOrEmpty(Model.PostalCode)){ <span class="badge bg-dark">CP: @Model.PostalCode</span> }
+                            </li>
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Teléfono:</span><br>
+                                <span class="fs-5">@Model.ContactPhone</span>
+                            </li>
+                            
+                            @if (!string.IsNullOrEmpty(Model.SpecialInstructions))
+                            {
+                                <li class="list-group-item px-0 py-3 bg-light rounded px-2 mt-2">
+                                    <span class="text-muted small text-uppercase fw-bold">Instrucciones Especiales:</span><br>
+                                    <em class="text-dark">"@Model.SpecialInstructions"</em>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light border-success mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-shop fs-1 text-success me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-success">Recojo en Tienda</h5>
+                                    <small class="text-muted">Debes acercarte a nuestro local.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Titular del Pedido:</span><br>
+                                <span class="fs-5">@Model.RecipientName</span>
+                            </li>
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Dirección de la Tienda:</span><br>
+                                <span class="fs-5 fw-bold">Av. La Cultura 123, Cusco</span>
+                            </li>
+                            <li class="list-group-item px-0 py-3">
+                                <span class="text-muted small text-uppercase fw-bold">Horario de Atención:</span><br>
+                                <span>Lunes a Viernes: 9:00 AM - 6:00 PM</span>
+                            </li>
+                        </ul>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mt-4 mt-lg-0">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-bag-check-fill"></i> Resumen de Compra
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Producto</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-end pe-4">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <span class="fw-bold text-dark">@(item.Product?.Name ?? item.ProductName)</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border">x @item.Quantity</span>
+                                        </td>
+                                        <td class="text-end pe-4">@((item.UnitPrice * item.Quantity).ToString("C", culture))</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2" class="text-end pt-3">Subtotal:</td>
+                                    <td class="text-end pe-4 pt-3">@((Model.Total - Model.ShippingCost).ToString("C", culture))</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="text-end text-muted">Envío:</td>
+                                    <td class="text-end pe-4 text-muted">
+                                        @if (Model.ShippingCost > 0)
+                                        {
+                                            <span>+ @Model.ShippingCost.ToString("C", culture)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success fw-bold">GRATIS</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td colspan="2" class="text-end pt-3 pb-3">
+                                        <span class="fs-5 fw-bold">TOTAL:</span>
+                                    </td>
+                                    <td class="text-end pe-4 pt-3 pb-3">
+                                        <span class="fs-4 fw-bold text-success">@Model.Total.ToString("C", culture)</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-end p-3">
+                     <a asp-action="ExportToPdf" asp-route-id="@Model.Id" target="_blank" class="btn btn-danger btn-sm">
+                        <i class="bi bi-file-pdf"></i> Descargar Factura
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

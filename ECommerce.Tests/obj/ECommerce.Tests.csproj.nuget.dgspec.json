@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj": {}
+    "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj": {}
   },
   "projects": {
-    "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj": {
+    "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj",
+        "projectUniqueName": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj",
         "projectName": "ECommerce.Tests",
-        "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj",
-        "packagesPath": "C:\\Users\\proye\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerce.Tests\\obj\\",
+        "projectPath": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerce.Tests\\ECommerce.Tests.csproj",
+        "packagesPath": "C:\\Users\\Krisna\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerce.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\proye\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Krisna\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -26,8 +26,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj": {
-                "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj"
+              "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj": {
+                "projectPath": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj"
               }
             }
           }
@@ -41,7 +41,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -75,26 +76,40 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100-rc.1.25451.107/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj": {
+    "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
+        "projectUniqueName": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
         "projectName": "ECommerce",
-        "projectPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
-        "packagesPath": "C:\\Users\\proye\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\proye\\Desktop\\UNIVERSIDAD CONTINENTAL\\IX\\Pruebas y calidad de software\\EcommerceV3\\ECommerceGrupo01\\ECommerceGrupo01\\obj\\",
+        "projectPath": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\ECommerce.csproj",
+        "packagesPath": "C:\\Users\\Krisna\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Krisna\\Pictures\\Visual\\ECommerceGrupo01\\ECommerceGrupo01\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\proye\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Krisna\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -117,12 +132,17 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "DinkToPdf": {
+              "target": "Package",
+              "version": "[1.0.8, )"
+            },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.8, )"
@@ -153,6 +173,10 @@
               "target": "Package",
               "version": "[13.0.3, )"
             },
+            "QuestPDF": {
+              "target": "Package",
+              "version": "[2025.7.4, )"
+            },
             "Stripe.net": {
               "target": "Package",
               "version": "[48.5.0, )"
@@ -160,6 +184,10 @@
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[9.0.4, )"
+            },
+            "iTextSharp.LGPLv2.Core": {
+              "target": "Package",
+              "version": "[3.7.8, )"
             }
           },
           "imports": [
@@ -173,6 +201,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[8.0.20, 8.0.20]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -181,7 +227,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.414/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.100-rc.1.25451.107/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

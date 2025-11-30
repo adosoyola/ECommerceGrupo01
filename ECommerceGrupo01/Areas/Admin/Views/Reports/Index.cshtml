@@ -11,6 +11,37 @@
     string nombreArchivoPdf = $"Reporte_Gestion_{DateTime.Now:yyyyMMdd}.pdf";
 }
 
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 rounded shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/Admin">⚙️ Panel Admin</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"
+            aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Products">📦 Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Orders">🛒 Órdenes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Users">👥 Usuarios</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/Admin/Reports">📊 Reportes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">🌐 Ver Tienda</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>📊 Reportes de Gestión</h2>
 

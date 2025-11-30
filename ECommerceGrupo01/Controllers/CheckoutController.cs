@@ -6,268 +6,420 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ECommerce.Services;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
+using Microsoft.AspNetCore.Http; // Necesario para Session
 
-public class CheckoutController : Controller
+namespace ECommerce.Controllers
 {
-    private readonly ApplicationDbContext _db;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly PaymentProcessor _paymentProcessor;
-    private const string SessionKey = "CartSession";
-
-    public CheckoutController(ApplicationDbContext db, UserManager<IdentityUser> userManager, PaymentProcessor paymentProcessor)
+    public class CheckoutController : Controller
     {
-        _db = db;
-        _userManager = userManager;
-        _paymentProcessor = paymentProcessor;
-    }
+        private readonly ApplicationDbContext _db;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly PaymentProcessor _paymentProcessor;
+        private readonly IEmailService _emailService;
+        private const string SessionKey = "CartSession";
 
-    private List<CartItem> GetCart()
-    {
-        var json = HttpContext.Session.GetString(SessionKey);
-        return string.IsNullOrEmpty(json)
-            ? new List<CartItem>()
-            // Corrección Warning CS8603: Añadir ?? new List<CartItem>()
-            : JsonConvert.DeserializeObject<List<CartItem>>(json) ?? new List<CartItem>();
-    }
-
-    private void SaveCart(List<CartItem> cart)
-    {
-        HttpContext.Session.SetString(SessionKey, JsonConvert.SerializeObject(cart));
-    }
-
-    [Authorize]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ProcessPaymentSimulation(PaymentViewModel model)
-    {
-        try
+        public CheckoutController(ApplicationDbContext db, UserManager<IdentityUser> userManager, PaymentProcessor paymentProcessor, IEmailService emailService)
         {
-            var userId = _userManager.GetUserId(User);
-            if (userId == null)
-            {
-                TempData["Error"] = "Usuario no encontrado.";
-                return View("PaymentSimulation", GetCart());
-            }
+            _db = db;
+            _userManager = userManager;
+            _paymentProcessor = paymentProcessor;
+            _emailService = emailService;
+        }
 
-            var user = await _userManager.FindByIdAsync(userId);
+        // --- MÉTODOS PRIVADOS ---
+        private List<CartItem> GetCart()
+        {
+            var json = HttpContext.Session.GetString(SessionKey);
+            return string.IsNullOrEmpty(json)
+                ? new List<CartItem>()
+                : JsonConvert.DeserializeObject<List<CartItem>>(json) ?? new List<CartItem>();
+        }
+
+        private void SaveCart(List<CartItem> cart)
+        {
+            HttpContext.Session.SetString(SessionKey, JsonConvert.SerializeObject(cart));
+        }
+
+        private List<CartItem> GetCartItems()
+        {
+            return GetCart();
+        }
+
+        // --- VISTAS DE PROCESO DE COMPRA ---
+
+        // 1. CONFIRMAR (GET) - Muestra el formulario
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Confirm()
+        {
             var cart = GetCart();
-
             if (cart == null || !cart.Any())
             {
                 TempData["Error"] = "El carrito está vacío.";
-                return View("PaymentSimulation", GetCart());
+                return RedirectToAction("Index", "Cart");
             }
 
-            // =================================================================
-            // 🔑 INICIO DE LA CORRECCIÓN
-            // =================================================================
+            var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+            decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
+            
+            ViewBag.ShippingCost = shippingCost;
+            ViewBag.CartItems = cart;
 
-            // 1. Simulación de Pago (usando el servicio)
-
-            // Tu PaymentProcessor espera un "saldo disponible".
-            // Vamos a simular un saldo alto (ej: 10,000) para que la compra pase.
-            decimal saldoDisponibleSimulado = 10000.00m;
-
-            // Corrección 1: Llamamos al método correcto (ProcessPayment)
-            // y le pasamos los argumentos que espera (monto y saldo simulado).
-            // También quitamos el 'await' porque el método no es asíncrono.
-            var paymentResult = _paymentProcessor.ProcessPayment(model.Amount, saldoDisponibleSimulado);
-
-            // Corrección 2: Usamos 'IsSuccess' (como está en PaymentResult.cs)
-            if (!paymentResult.IsSuccess)
+            var model = new DeliveryInfoViewModel
             {
-                // Corrección 3: Usamos 'Message' (como está en PaymentResult.cs)
-                TempData["Error"] = $"Error de pago: {paymentResult.Message}";
-                return View("PaymentSimulation", GetCart());
-            }
-
-            // =================================================================
-            // 🔑 FIN DE LA CORRECCIÓN
-            // =================================================================
-
-            // 2. Lógica de Stock (la movimos aquí)
-            var errors = new List<string>();
-            foreach (var item in cart)
-            {
-                var product = await _db.Products.FindAsync(item.ProductId);
-                if (product == null)
-                {
-                    errors.Add($"El producto '{item.Name}' ya no está disponible.");
-                }
-                else if (product.Stock < item.Quantity)
-                {
-                    errors.Add($"Stock insuficiente para '{item.Name}'. Disponible: {product.Stock}.");
-                }
-            }
-
-            if (errors.Any())
-            {
-                TempData["Error"] = string.Join("\n", errors);
-                // NOTA: No revertimos el pago porque es una simulación,
-                // pero en un caso real, aquí se llamaría a _paymentProcessor.RevertPaymentAsync(paymentResult.TransactionId);
-                return View("PaymentSimulation", GetCart());
-            }
-
-            // 3. Crear la Orden (si todo está OK)
-            var order = new Order
-            {
-                UserId = userId,
-                Total = model.Amount,
-                Status = OrderStatus.EnPreparacion, // O usa OrderStatus.Pendiente si lo prefieres
-                Items = cart.Select(ci => new OrderItem
-                {
-                    ProductId = ci.ProductId,
-                    ProductName = ci.Name, // Guardar el nombre por si el producto se borra
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.UnitPrice
-                }).ToList()
+                EstimatedDeliveryDate = DateTime.Now.AddDays(2).ToString("dd/MM/yyyy"),
+                DeliveryMethod = "Home",
+                City = "Cusco"
             };
 
-            // 4. Actualizar Stock
-            foreach (var item in cart)
+            return View(model);
+        }
+
+        // 2. PROCESAR DATOS DE ENVÍO (POST) - Guarda en sesión
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> Payment(DeliveryInfoViewModel info)
+        {
+            var cart = GetCart();
+
+            if (ModelState.IsValid)
             {
-                var product = await _db.Products.FindAsync(item.ProductId);
-                if (product != null)
+                HttpContext.Session.SetString("DeliveryMethod", info.DeliveryMethod);
+
+                if (info.DeliveryMethod == "Home")
                 {
-                    product.Stock -= item.Quantity;
+                    HttpContext.Session.SetString("ShipName", info.FullName ?? "");
+                    HttpContext.Session.SetString("ShipAddress", info.Address ?? "");
+                    HttpContext.Session.SetString("ShipZip", info.PostalCode ?? ""); // ✅ GUARDAR ZIP
+                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? "");
+                    HttpContext.Session.SetString("ShipNotes", info.SpecialInstructions ?? "");
                 }
+                else
+                {
+                    HttpContext.Session.SetString("ShipName", "Cliente en Tienda");
+                    HttpContext.Session.SetString("ShipAddress", "RECOJO EN TIENDA");
+                    HttpContext.Session.SetString("ShipZip", "");
+                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? ""); 
+                    HttpContext.Session.SetString("ShipNotes", "");
+                }
+
+                return RedirectToAction("PaymentSimulation");
             }
 
-            _db.Orders.Add(order);
-            await _db.SaveChangesAsync();
+            var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+            decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
 
-            // 5. Limpiar Carrito
-            SaveCart(new List<CartItem>());
+            ViewBag.ShippingCost = shippingCost;
+            ViewBag.CartItems = cart; 
 
-            // 6. Redirigir a "Success"
-            TempData["SuccessMessage"] = $"¡Pedido #{order.Id} realizado con éxito!";
-            // Corrección: El nombre de tu vista de éxito es 'Success.cshtml'
-            // El controlador usa 'Success()'
-            return RedirectToAction("Success");
+            return View("Confirm", info);
         }
-        catch (Exception ex)
+
+        // 3. SIMULACIÓN DE PAGO (GET)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> PaymentSimulation()
         {
-            // Log real (ej: _logger.LogError(ex, "Error en ProcessPaymentSimulation"))
-            TempData["Error"] = "Ocurrió un error inesperado al procesar el pago.";
-            return View("PaymentSimulation", GetCart());
+            var cartItems = GetCartItems();
+            if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
+
+            string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
+            
+            decimal subtotal = cartItems.Sum(x => x.UnitPrice * x.Quantity);
+            decimal shippingCost = 0;
+
+            var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+            decimal dbShippingPrice = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
+
+            if (methodString == "Home")
+            {
+                shippingCost = dbShippingPrice;
+            }
+
+            ViewBag.Subtotal = subtotal;
+            ViewBag.ShippingCost = shippingCost;
+            ViewBag.Total = subtotal + shippingCost;
+            ViewBag.DeliveryMethod = methodString;
+            ViewBag.ShipAddress = HttpContext.Session.GetString("ShipAddress");
+
+            return View(cartItems);
         }
-    }
 
-    // ACCIÓN NUEVA: Página de éxito
-    [Authorize]
-    [HttpGet]
-    public IActionResult Success()
-    {
-        return View();
-    }
-
-    // ACCIONES EXISTENTES (mantener igual)
-    [Authorize]
-    [HttpGet]
-    public IActionResult Confirm()
-    {
-        var cart = GetCart();
-        if (cart == null || !cart.Any())
+        // 4. PROCESAR PAGO Y CREAR ORDEN (POST)
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProcessPaymentSimulation(PaymentViewModel model)
         {
-            TempData["Error"] = "El carrito está vacío.";
-            return RedirectToAction("Index", "Cart");
-        }
-        return RedirectToAction("PaymentSimulation");
-    }
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (userId == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
 
-    [Authorize]
-    [HttpGet]
-    public IActionResult PaymentSimulation()
-    {
-        var cart = GetCart();
-        if (cart == null || !cart.Any())
+                var user = await _userManager.FindByIdAsync(userId);
+                var cart = GetCart();
+
+                if (cart == null || !cart.Any())
+                {
+                    TempData["Error"] = "El carrito está vacío.";
+                    return RedirectToAction("Index", "Cart");
+                }
+
+                // A. RECUPERAR DATOS DE SESIÓN
+                string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
+                var method = methodString == "Store" ? DeliveryMethod.StorePickup : DeliveryMethod.HomeDelivery;
+                
+                string shipName = HttpContext.Session.GetString("ShipName") ?? user.UserName;
+                string shipAddress = HttpContext.Session.GetString("ShipAddress") ?? "Dirección no especificada";
+                string shipZip = HttpContext.Session.GetString("ShipZip") ?? ""; // ✅ RECUPERAR ZIP
+                string shipPhone = HttpContext.Session.GetString("ShipPhone") ?? "";
+                string shipNotes = HttpContext.Session.GetString("ShipNotes") ?? "";
+
+                decimal subtotal = cart.Sum(x => x.UnitPrice * x.Quantity);
+                decimal shippingCost = 0;
+
+                if (method == DeliveryMethod.HomeDelivery)
+                {
+                    var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
+                    shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
+                }
+
+                // B. VALIDAR STOCK
+                var errors = new List<string>();
+                foreach (var item in cart)
+                {
+                    var product = await _db.Products.FindAsync(item.ProductId);
+                    if (product == null)
+                        errors.Add($"El producto '{item.Name}' ya no está disponible.");
+                    else if (product.Stock < item.Quantity)
+                        errors.Add($"Stock insuficiente para '{item.Name}'. Disponible: {product.Stock}.");
+                }
+
+                if (errors.Any())
+                {
+                    TempData["Error"] = string.Join("\n", errors);
+                    ViewBag.Subtotal = subtotal;
+                    ViewBag.ShippingCost = shippingCost;
+                    ViewBag.Total = subtotal + shippingCost;
+                    return View("PaymentSimulation", cart);
+                }
+
+                // C. SIMULAR PAGO
+                decimal saldoDisponibleSimulado = 10000.00m;
+                var paymentResult = _paymentProcessor.ProcessPayment(model.Amount, saldoDisponibleSimulado);
+
+                if (!paymentResult.IsSuccess)
+                {
+                    TempData["Error"] = $"Error de pago: {paymentResult.Message}";
+                    ViewBag.Subtotal = subtotal;
+                    ViewBag.ShippingCost = shippingCost;
+                    ViewBag.Total = subtotal + shippingCost;
+                    return View("PaymentSimulation", cart);
+                }
+
+                // D. CREAR ORDEN EN BD
+                var order = new Order
+                {
+                    UserId = userId,
+                    Total = subtotal + shippingCost,
+                    ShippingCost = shippingCost,
+                    Status = OrderStatus.EnPreparacion,
+                    DeliveryMethod = method,
+                    CreatedAt = DateTime.Now,
+                    
+                    // Asignación de Datos
+                    RecipientName = shipName,
+                    ShippingAddress = shipAddress,
+                    PostalCode = shipZip, // ✅ GUARDAR ZIP EN BD
+                    ContactPhone = shipPhone,
+                    SpecialInstructions = shipNotes,
+                    ShippingCity = "Cusco",
+
+                    Items = cart.Select(ci => new OrderItem
+                    {
+                        ProductId = ci.ProductId,
+                        ProductName = ci.Name,
+                        Quantity = ci.Quantity,
+                        UnitPrice = ci.UnitPrice
+                    }).ToList()
+                };
+
+                // E. DESCONTAR STOCK
+                foreach (var item in cart)
+                {
+                    var product = await _db.Products.FindAsync(item.ProductId);
+                    if (product != null) product.Stock -= item.Quantity;
+                }
+
+                _db.Orders.Add(order);
+                await _db.SaveChangesAsync();
+
+                // F. LIMPIAR CARRITO Y SESIÓN
+                SaveCart(new List<CartItem>());
+                
+                HttpContext.Session.Remove("DeliveryMethod");
+                HttpContext.Session.Remove("ShipAddress");
+                HttpContext.Session.Remove("ShipZip"); // ✅ LIMPIAR ZIP
+                HttpContext.Session.Remove("ShipName");
+                HttpContext.Session.Remove("ShipPhone");
+                HttpContext.Session.Remove("ShipNotes");
+
+                // G. ENVIAR CORREO
+                try 
+                {
+                    var email = user.Email;
+                    string subject = $"Confirmación de Pedido #{order.Id} - SystemCusco";
+                    string detallesEnvioHtml = "";
+                    
+                    if (method == DeliveryMethod.HomeDelivery)
+                    {
+                        detallesEnvioHtml = $@"
+                            <div style='background-color:#e7f1ff; padding:15px; border-radius:5px; margin-bottom:15px;'>
+                                <h3 style='color:#0d6efd; margin-top:0;'>🚚 Envío a Domicilio</h3>
+                                <p><strong>Destinatario:</strong> {shipName}</p>
+                                <p><strong>Dirección:</strong> {shipAddress} (CP: {shipZip})</p>
+                                <p><strong>Teléfono:</strong> {shipPhone}</p>
+                                <p><strong>Notas:</strong> {shipNotes}</p>
+                            </div>";
+                    }
+                    else
+                    {
+                        detallesEnvioHtml = $@"
+                            <div style='background-color:#e8f5e9; padding:15px; border-radius:5px; margin-bottom:15px;'>
+                                <h3 style='color:#198754; margin-top:0;'>🏪 Recojo en Tienda</h3>
+                                <p><strong>Titular:</strong> {user.UserName}</p>
+                                <p><strong>Lugar:</strong> Av. La Cultura 123, Cusco</p>
+                            </div>";
+                    }
+
+                    string productRows = string.Join("", order.Items.Select(i => $@"
+                        <tr>
+                            <td style='padding:8px; border-bottom:1px solid #ddd;'>{i.ProductName}</td>
+                            <td style='padding:8px; border-bottom:1px solid #ddd; text-align:center;'>{i.Quantity}</td>
+                            <td style='padding:8px; border-bottom:1px solid #ddd; text-align:right;'>S/ {(i.UnitPrice * i.Quantity):0.00}</td>
+                        </tr>"));
+
+                    string body = $@"
+                        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px;'>
+                            <div style='background-color: #4CAF50; color: white; padding: 20px; text-align: center;'>
+                                <h2>¡Gracias por tu compra!</h2>
+                            </div>
+                            <div style='padding: 20px;'>
+                                <p>Hola,</p>
+                                <p>Tu pedido ha sido confirmado.</p>
+                                {detallesEnvioHtml}
+                                <table style='width:100%; border-collapse:collapse; margin-top:15px;'>
+                                    <thead>
+                                        <tr style='background-color:#f9f9f9;'>
+                                            <th style='text-align:left; padding:8px;'>Producto</th>
+                                            <th style='text-align:center; padding:8px;'>Cant.</th>
+                                            <th style='text-align:right; padding:8px;'>Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>{productRows}</tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan='2' style='text-align:right; padding:10px;'>Envío:</td>
+                                            <td style='text-align:right; padding:10px;'>S/ {order.ShippingCost:0.00}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan='2' style='text-align:right; font-weight:bold; padding:10px;'>TOTAL:</td>
+                                            <td style='text-align:right; font-weight:bold; color:#4CAF50; font-size:18px;'>S/ {order.Total:0.00}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>";
+
+                    await _emailService.SendEmailAsync(email, subject, body);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error enviando correo: {ex.Message}");
+                }
+
+                TempData["SuccessMessage"] = $"¡Pedido #{order.Id} realizado con éxito!";
+                return RedirectToAction("Success");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Ocurrió un error inesperado: {ex.Message}";
+                ViewBag.Subtotal = 0; 
+                return View("PaymentSimulation", GetCart());
+            }
+        }
+
+        // --- VISTAS POST-COMPRA ---
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Success()
         {
-            TempData["Error"] = "El carrito está vacío.";
-            return RedirectToAction("Index", "Cart");
+            return View();
         }
-        return View(cart);
-    }
 
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> History()
-    {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> History()
         {
-            return RedirectToAction("Login", "Account", new { area = "Identity" });
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+            var orders = await _db.Orders
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+
+            return View(orders);
         }
 
-        var orders = await _db.Orders
-            .Where(o => o.UserId == userId)
-            .OrderByDescending(o => o.CreatedAt) // Ordenar por fecha
-            .ToListAsync();
-
-        return View(orders);
-    }
-
-    // ========================================================
-    // 🔑 MÉTODO NUEVO 1: DETAILS
-    // ========================================================
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> Details(int id)
-    {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
         {
-            return RedirectToAction("Login", "Account", new { area = "Identity" });
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+            var order = await _db.Orders
+                .Where(o => o.Id == id && o.UserId == userId)
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                TempData["Error"] = "Pedido no encontrado.";
+                return RedirectToAction("History");
+            }
+
+            return View(order);
         }
 
-        // Buscamos la orden, asegurándonos que sea del usuario
-        // e incluimos los "Items" y los "Products" de esos items.
-        var order = await _db.Orders
-            .Where(o => o.Id == id && o.UserId == userId)
-            .Include(o => o.Items)
-            .ThenInclude(i => i.Product) // Necesario para item.Product.Name
-            .FirstOrDefaultAsync();
-
-        if (order == null)
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> ExportToPdf(int id)
         {
-            // No se encontró la orden o no pertenece al usuario
-            TempData["Error"] = "Pedido no encontrado.";
-            return RedirectToAction("History");
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+            var order = await _db.Orders
+                .Where(o => o.Id == id && o.UserId == userId)
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .Include(o => o.User)
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+            {
+                TempData["Error"] = "Pedido no encontrado.";
+                return RedirectToAction("History");
+            }
+
+            return View("InvoicePdf", order);
         }
-
-        // Enviamos el pedido a la vista "Details.cshtml"
-        return View(order);
-    }
-
-    // ========================================================
-    // 🔑 MÉTODO NUEVO 2: EXPORTTOPDF
-    // ========================================================
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> ExportToPdf(int id)
-    {
-        var userId = _userManager.GetUserId(User);
-        if (userId == null)
-        {
-            return RedirectToAction("Login", "Account", new { area = "Identity" });
-        }
-
-        // Buscamos la orden, incluyendo Items, Productos y el Usuario (para el email)
-        var order = await _db.Orders
-            .Where(o => o.Id == id && o.UserId == userId)
-            .Include(o => o.Items)
-            .ThenInclude(i => i.Product)
-            .Include(o => o.User) // 🔑 ¡IMPORTANTE! Para que Model.User.Email funcione
-            .FirstOrDefaultAsync();
-
-        if (order == null)
-        {
-            TempData["Error"] = "Pedido no encontrado.";
-            return RedirectToAction("History");
-        }
-
-        // Enviamos el pedido a la vista "InvoicePdf.cshtml"
-        // Esta vista se mostrará en una pestaña nueva (por el target="_blank")
-        // y el usuario podrá imprimirla a PDF desde su navegador.
-        return View("InvoicePdf", order);
     }
 }

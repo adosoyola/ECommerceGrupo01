@@ -43,13 +43,20 @@
                     <a class="nav-link active" aria-current="page" href="/">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Products" asp-action="Index">Productos</a>
-                </li>
+                        <a class="nav-link" asp-controller="Products" asp-action="Index">
+                            <i class="bi bi-shop"></i> Productos
+                        </a>
+                    </li>
                 <li class="nav-item">
-                    <a class="nav-link" asp-controller="Cart" asp-action="Index">
-                        Carrito <i class="bi bi-cart-fill"></i>
-                    </a>
-                </li>
+                        <a class="nav-link" asp-controller="Checkout" asp-action="History">
+                            <i class="bi bi-receipt"></i> Mis pedidos
+                        </a>
+                    </li>
+                <li class="nav-item">
+                        <a class="nav-link" asp-controller="Cart" asp-action="Index">
+                            <i class="bi bi-cart3"></i> Carrito de Compras
+                        </a>
+                    </li>
 
                 @if (User.IsInRole("Admin") || User.IsInRole("ADMIN"))
                 {
@@ -63,13 +70,11 @@
 
                 @if (SignInManager.IsSignedIn(User))
                 {
-                    <li class="nav-item ms-2">
-                        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout"
-                            asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                            <button type="submit" class="nav-link btn btn-link text-white fw-bold"
-                                style="text-decoration: none;">
-                                Cerrar sesión <i class="bi bi-box-arrow-right"></i>
-                            </button>
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" id="logoutForm" class="d-none">
                         </form>
                     </li>
                 }
