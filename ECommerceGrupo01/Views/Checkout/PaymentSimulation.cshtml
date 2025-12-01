@@ -6,7 +6,7 @@
     var subtotal = (decimal)ViewBag.Subtotal;
     var shippingCost = (decimal)ViewBag.ShippingCost;
     var total = subtotal + shippingCost;
-    var deliveryMethod = ViewBag.DeliveryMethod as string ?? "HomeDelivery";
+    var deliveryMethod = ViewBag.DeliveryMethod as string ?? "Home";
 
     var culture = new System.Globalization.CultureInfo("es-PE");
 }
@@ -16,14 +16,26 @@
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+        /* LOGICA CORREGIDA:
+        Si el error es "El carrito está vacío." PERO la lista (Model) tiene items,
+        entonces es un falso positivo y no mostramos la alerta.
+        Si es otro error (ej: tarjeta rechazada), sí lo mostramos. */
+
+        var errorMsg = TempData["Error"].ToString();
+        bool isCartEmptyError = errorMsg.Contains("vacío") || errorMsg.Contains("empty");
+        bool hasItems = Model != null && Model.Any();
+
+        // Solo mostramos la alerta si NO es un error de "carrito vacío" teniendo items
+        if (!(isCartEmptyError && hasItems))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
     }
 
     <div class="row justify-content-center">
-        <!-- Resumen del pedido -->
         <div class="col-md-5 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
@@ -31,22 +43,30 @@
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
-                        @foreach (var item in Model) 
+                        @if (Model != null && Model.Any())
                         {
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <img src="@(string.IsNullOrEmpty(item.Image) ? "/imagenes/no-image.png" : item.Image)"
-                                         alt="@item.Name"
-                                         class="rounded border me-3"
-                                         style="width: 50px; height: 50px; object-fit: cover;" />
-                                    <div>
-                                        <h6 class="my-0">@item.Name</h6>
-                                        <small class="text-muted">Cant: @item.Quantity</small>
+                            @foreach (var item in Model)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="@(string.IsNullOrEmpty(item.Image) ? "/imagenes/no-image.png" : item.Image)"
+                                            alt="@item.Name" class="rounded border me-3"
+                                            style="width: 50px; height: 50px; object-fit: cover;" />
+                                        <div>
+                                            <h6 class="my-0">@item.Name</h6>
+                                            <small class="text-muted">Cant: @item.Quantity</small>
+                                        </div>
                                     </div>
-                                </div>
-                                <span class="text-muted fw-bold">
-                                    @((item.UnitPrice * item.Quantity).ToString("C", culture))
-                                </span>
+                                    <span class="text-muted fw-bold">
+                                        @((item.UnitPrice * item.Quantity).ToString("C", culture))
+                                    </span>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="list-group-item text-center py-4">
+                                <span class="text-muted">No hay items visuales para mostrar</span>
                             </li>
                         }
                     </ul>
@@ -69,14 +89,13 @@
             </div>
         </div>
 
-        <!-- Formulario de pago -->
         <div class="col-md-5">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <i class="bi bi-credit-card"></i> Datos de Pago
                 </div>
                 <div class="card-body">
-                    @if (deliveryMethod == "HomeDelivery")
+                    @if (deliveryMethod == "Home")
                     {
                         <div class="alert alert-info mb-3 border-info d-flex align-items-center">
                             <i class="bi bi-truck-front-fill fs-3 me-3"></i>
@@ -105,7 +124,7 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-credit-card-2-front"></i></span>
                                 <input type="text" class="form-control" id="CardNumber" name="CardNumber" required
-                                       maxlength="19" placeholder="0000 0000 0000 0000" autocomplete="off" />
+                                    maxlength="19" placeholder="0000 0000 0000 0000" autocomplete="off" />
                             </div>
                             <div class="form-text text-muted">Tarjeta de prueba: 4111 1111 1111 1111</div>
                         </div>
@@ -114,14 +133,14 @@
                             <div class="col-7 mb-3">
                                 <label for="Expiration" class="form-label fw-bold">Vencimiento</label>
                                 <input type="text" class="form-control" id="Expiration" name="Expiration" required
-                                       maxlength="5" placeholder="MM/AA" autocomplete="off" />
+                                    maxlength="5" placeholder="MM/AA" autocomplete="off" />
                             </div>
 
                             <div class="col-5 mb-3">
                                 <label for="CVV" class="form-label fw-bold">CVV</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="CVV" name="CVV" required maxlength="4"
-                                           placeholder="123" autocomplete="off" />
+                                        placeholder="123" autocomplete="off" />
                                     <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
                                 </div>
                             </div>
@@ -140,7 +159,8 @@
             </div>
 
             <div class="text-center mt-3">
-                <a asp-controller="Checkout" asp-action="Confirm" class="btn btn-link text-secondary text-decoration-none">
+                <a asp-controller="Checkout" asp-action="Confirm"
+                    class="btn btn-link text-secondary text-decoration-none">
                     <i class="bi bi-arrow-left"></i> Volver a Confirmación
                 </a>
             </div>
