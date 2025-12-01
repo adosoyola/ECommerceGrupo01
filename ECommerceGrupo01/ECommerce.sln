@@ -5,8 +5,7 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECommerce", "ECommerce.csproj", "{531E5B42-0657-6603-61C8-1B2E47F866F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECommerce.SeleniumTests", "ECommerce.SeleniumTests\ECommerce.SeleniumTests.csproj", "{19C8A881-0167-4EC5-8757-00B9EEF7513A}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
