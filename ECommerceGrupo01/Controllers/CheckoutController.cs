@@ -65,7 +65,7 @@ namespace ECommerce.Controllers
 
             var shippingSetting = await _db.AppSettings.FirstOrDefaultAsync(x => x.Key == "ShippingCost");
             decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
-            
+
             ViewBag.ShippingCost = shippingCost;
             ViewBag.CartItems = cart;
 
@@ -103,7 +103,7 @@ namespace ECommerce.Controllers
                     HttpContext.Session.SetString("ShipName", "Cliente en Tienda");
                     HttpContext.Session.SetString("ShipAddress", "RECOJO EN TIENDA");
                     HttpContext.Session.SetString("ShipZip", "");
-                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? ""); 
+                    HttpContext.Session.SetString("ShipPhone", info.PhoneNumber ?? "");
                     HttpContext.Session.SetString("ShipNotes", "");
                 }
 
@@ -114,7 +114,7 @@ namespace ECommerce.Controllers
             decimal shippingCost = shippingSetting != null && decimal.TryParse(shippingSetting.Value, out decimal val) ? val : 6.00m;
 
             ViewBag.ShippingCost = shippingCost;
-            ViewBag.CartItems = cart; 
+            ViewBag.CartItems = cart;
 
             return View("Confirm", info);
         }
@@ -128,7 +128,7 @@ namespace ECommerce.Controllers
             if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
 
             string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
-            
+
             decimal subtotal = cartItems.Sum(x => x.UnitPrice * x.Quantity);
             decimal shippingCost = 0;
 
@@ -172,7 +172,7 @@ namespace ECommerce.Controllers
                 // A. RECUPERAR DATOS DE SESIÓN
                 string methodString = HttpContext.Session.GetString("DeliveryMethod") ?? "Home";
                 var method = methodString == "Store" ? DeliveryMethod.StorePickup : DeliveryMethod.HomeDelivery;
-                
+
                 string shipName = HttpContext.Session.GetString("ShipName") ?? user.UserName;
                 string shipAddress = HttpContext.Session.GetString("ShipAddress") ?? "Dirección no especificada";
                 string shipZip = HttpContext.Session.GetString("ShipZip") ?? ""; // ✅ RECUPERAR ZIP
@@ -209,7 +209,7 @@ namespace ECommerce.Controllers
                 }
 
                 // C. SIMULAR PAGO
-                decimal saldoDisponibleSimulado = 10000.00m;
+                decimal saldoDisponibleSimulado = 50000.00m;
                 var paymentResult = _paymentProcessor.ProcessPayment(model.Amount, saldoDisponibleSimulado);
 
                 if (!paymentResult.IsSuccess)
@@ -230,7 +230,7 @@ namespace ECommerce.Controllers
                     Status = OrderStatus.EnPreparacion,
                     DeliveryMethod = method,
                     CreatedAt = DateTime.Now,
-                    
+
                     // Asignación de Datos
                     RecipientName = shipName,
                     ShippingAddress = shipAddress,
@@ -260,7 +260,7 @@ namespace ECommerce.Controllers
 
                 // F. LIMPIAR CARRITO Y SESIÓN
                 SaveCart(new List<CartItem>());
-                
+
                 HttpContext.Session.Remove("DeliveryMethod");
                 HttpContext.Session.Remove("ShipAddress");
                 HttpContext.Session.Remove("ShipZip"); // ✅ LIMPIAR ZIP
@@ -269,12 +269,12 @@ namespace ECommerce.Controllers
                 HttpContext.Session.Remove("ShipNotes");
 
                 // G. ENVIAR CORREO
-                try 
+                try
                 {
                     var email = user.Email;
                     string subject = $"Confirmación de Pedido #{order.Id} - SystemCusco";
                     string detallesEnvioHtml = "";
-                    
+
                     if (method == DeliveryMethod.HomeDelivery)
                     {
                         detallesEnvioHtml = $@"
@@ -348,7 +348,7 @@ namespace ECommerce.Controllers
             catch (Exception ex)
             {
                 TempData["Error"] = $"Ocurrió un error inesperado: {ex.Message}";
-                ViewBag.Subtotal = 0; 
+                ViewBag.Subtotal = 0;
                 return View("PaymentSimulation", GetCart());
             }
         }

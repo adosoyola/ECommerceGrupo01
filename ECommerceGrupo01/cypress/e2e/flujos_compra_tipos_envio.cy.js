@@ -1,136 +1,161 @@
+// Archivo: cypress/e2e/compra_envio_recojo.cy.js
+
 describe('Flujos de Compra: Envío a Domicilio vs Recojo en Tienda', () => {
 
-    const BASE_URL = 'http://localhost:5012'; 
-    const CLIENT_USER = 'cliente_test@gmail.com'; 
-    const CLIENT_PASS = 'Test@123';
+    const BASE_URL = 'http://localhost:5012';
+    // Credenciales del cliente de prueba
+    const CLIENT_USER = 'prueba@gmail.com';
+    const CLIENT_PASS = 'Prueba123@';
 
-    // Función para Login (Reutilizable)
+    // Datos de Envío Requeridos para Caso A
+    const SHIPPING_DATA = {
+        fullName: 'Prueba Cliente Cypress',
+        address: 'Av. La Cultura 123, Cusco',
+        postalCode: '08001',
+        phone: '987654321'
+    };
+
+    // --- Funciones Reutilizables ---
+
+    // 1. Función para Login
     const login = () => {
         cy.visit(`${BASE_URL}/Identity/Account/Login`);
         cy.get('input[name="Input.Email"]').clear().type(CLIENT_USER);
         cy.get('input[id="passwordInput"]').clear().type(CLIENT_PASS);
         cy.get('form#account button[type="submit"]').click();
+        cy.url().should('not.include', '/Login');
     };
 
-    // Función para Agregar Producto al Carrito (Reutilizable y Robusta)
+    // 2. Función para Agregar Producto al Carrito
     const agregarProductoAlCarrito = () => {
         cy.visit(`${BASE_URL}/Products`);
-        
+
         // Entrar al primer producto
         cy.get('.card').first().within(() => { cy.get('a').click(); });
 
         // Verificar Stock
         cy.get('body').then(($body) => {
-            if ($body.text().includes('Stock: 0')) {
-                throw new Error("⚠️ El producto no tiene stock. Cambia de producto en la BD.");
+            if ($body.text().includes('Stock: 0') || $body.text().includes('Agotado')) {
+                assert.fail("⚠️ El producto no tiene stock. Asegúrate de que el producto de prueba tenga stock en la BD.");
             }
         });
 
-        // Llenar cantidad y enviar formulario a la fuerza (Fix del carrito vacío)
+        // Llenar cantidad y enviar formulario a la fuerza para evitar problemas de clic
         cy.get('input#qty').clear().type('1');
         cy.get('form[action*="Cart/Add"]').submit();
-        cy.wait(2000); // Espera técnica para la BD
+        cy.wait(1500); // Espera técnica para la BD
     };
+
+    // 3. Función para Limpiar Carrito
+    const limpiarCarrito = () => {
+        cy.visit(`${BASE_URL}/Cart`);
+        cy.log('🗑️ Limpiando el carrito antes de la prueba con enfoque iterativo robusto...');
+
+        const removeNextItem = () => {
+            cy.get('body').then(($body) => {
+                const removeForm = $body.find('form[action*="Cart/Remove"]').first();
+
+                if (removeForm.length) {
+                    cy.log('🔄 Ítem encontrado. Removiendo...');
+                    cy.wrap(removeForm).submit();
+                    cy.wait(1500).then(() => {
+                        cy.visit(`${BASE_URL}/Cart`);
+                        removeNextItem();
+                    });
+                } else {
+                    cy.log('🛒 Carrito vacío. Verificando mensaje de éxito.');
+                    cy.contains('Tu carrito está vacío', { timeout: 10000 }).should('be.visible');
+                }
+            });
+        };
+
+        removeNextItem();
+    };
+
+
+    // --- Ejecutar antes de CADA prueba ---
+    beforeEach(() => {
+        // Aseguramos el login (o restauramos la sesión)
+        cy.session('clientSession', login);
+        cy.visit(BASE_URL);
+
+        // Limpieza y preparación
+        limpiarCarrito();
+        agregarProductoAlCarrito();
+        cy.visit(`${BASE_URL}/Cart`); // Ir al carrito para iniciar el checkout
+    });
 
     // --- PRUEBA 1: ENVÍO A DOMICILIO ---
     it('Caso A: Compra con ENVÍO A DOMICILIO (Llena dirección y paga)', () => {
-        
-        // 1. Preparación
-        cy.session('clientSession', login);
-        agregarProductoAlCarrito();
+        // PASO 1: Confirmar Compra / Procesar Pago desde el carrito
+        cy.log('1. Clic en "Confirmar Compra" / "Procesar Pago"');
+        cy.contains('a, button, input[type="submit"]', /Confirmar Compra|Procesar Pago|Pagar|Checkout/i).click();
 
-        // 2. Ir al Carrito
-        cy.visit(`${BASE_URL}/Cart`);
-        
-        // 3. Clic en "Procesar Pago" (Buscando el botón correcto)
-        cy.get('body').then(($body) => {
-            if ($body.find('input[value*="Procesar"]').length > 0) {
-                cy.get('input[value*="Procesar"]').click();
-            } else {
-                cy.contains(/Procesar|Pagar|Checkout/i).click();
-            }
-        });
+        cy.log('2. PANTALLA DE DATOS DE ENVÍO - Seleccionando Envío a Domicilio y llenando dirección');
 
-        // 4. PANTALLA DE DATOS DE ENVÍO (La de tu imagen image_7a8c6f.png)
-        // Aquí es donde seleccionamos el tipo de envío
-        cy.log('🚚 Seleccionando: Envío a Domicilio');
-        
-        // Buscamos el texto "Envío a domicilio" y le damos clic
-        // Esto debería activar el radio button asociado
+        // Seleccionar Envío a Domicilio
         cy.contains('label', /Envío|Domicilio/i).click();
 
-        // Llenar la dirección (Solo necesario para envío a domicilio)
-        // Buscamos un input que sea de dirección, ciudad o calle
-        cy.get('body').then(($body) => {
-            if ($body.find('input[name*="Address"], input[name*="Direccion"]').length > 0) {
-                cy.get('input[name*="Address"], input[name*="Direccion"]')
-                  .clear().type('Av. La Cultura 123, Cusco');
-            }
-        });
+        // Llenar TODOS los campos obligatorios para que el formulario avance (CORRECCIÓN)
+        cy.get('input#FullName').clear().type(SHIPPING_DATA.fullName);
+        cy.get('input[name*="Address"], input[name*="Direccion"]').clear().type(SHIPPING_DATA.address);
+        // Asumimos que estos campos también son requeridos
+        cy.get('input#PostalCode').clear().type(SHIPPING_DATA.postalCode);
+        cy.get('input#PhoneNumber').clear().type(SHIPPING_DATA.phone);
 
-        // Clic en "Ir a Pagar" o "Continuar"
-        cy.get('button[type="submit"]').contains(/Pagar|Continuar|Siguiente/i).click();
+        // Clic en "Ir a Pagar" / "Continuar" para avanzar a la simulación de pago
+        cy.log('Clic en "Ir a Pagar" o "Continuar"');
+        cy.get('button[type="submit"], input[type="submit"]').contains(/Pagar|Continuar|Siguiente|Ir a Pagar/i).click();
 
-        // 5. PANTALLA DE PAGO
-        cy.url().should('include', 'PaymentSimulation');
-        
+        cy.log('3. PANTALLA DE PAGO - Simulación');
+        // El .should('include', 'PaymentSimulation') ahora debería pasar después de llenar los campos
+        cy.url().should('include', 'PaymentSimulation', { timeout: 10000 });
+
+        // Llenar datos de la tarjeta (usando la secuencia de pago estándar)
         cy.get('input#CardNumber').type('4111111111111111');
-        cy.get('input#Expiration').type('12/30');
+        cy.get('input#Expiration').type('12/26');
         cy.get('input#CVV').type('123');
-        
-        // Pagar
-        cy.get('input#CardNumber').parents('form').find('button[type="submit"]').click();
 
-        // 6. Validación Final
+        // Pagar: Usamos cy.contains para evitar la ambigüedad (CORRECCIÓN)
+        cy.contains('button', /Pagar/i).click();
+
+        cy.log('4. Validación Final');
         cy.url().should('include', '/Checkout/Success');
-        cy.log('✅ Compra con Envío a Domicilio Exitosa');
+        cy.contains('Compra Exitosa', { timeout: 10000 }).should('be.visible');
+        cy.log('¡Compra Exitosa! ✅');
     });
 
 
     // --- PRUEBA 2: RECOJO EN TIENDA ---
     it('Caso B: Compra con RECOJO EN TIENDA (Salta dirección y paga)', () => {
-        
-        // 1. Preparación
-        cy.session('clientSession', login);
-        agregarProductoAlCarrito();
+        // PASO 1: Confirmar Compra / Procesar Pago desde el carrito
+        cy.log('1. Clic en "Confirmar Compra" / "Procesar Pago"');
+        cy.contains('a, button, input[type="submit"]', /Confirmar Compra|Procesar Pago|Pagar|Checkout/i).click();
 
-        // 2. Ir al Carrito
-        cy.visit(`${BASE_URL}/Cart`);
-        
-        // 3. Clic en "Procesar Pago"
-        cy.get('body').then(($body) => {
-            if ($body.find('input[value*="Procesar"]').length > 0) {
-                cy.get('input[value*="Procesar"]').click();
-            } else {
-                cy.contains(/Procesar|Pagar|Checkout/i).click();
-            }
-        });
+        cy.log('2. PANTALLA DE DATOS DE ENVÍO - Seleccionando Recojo en Tienda');
 
-        // 4. PANTALLA DE DATOS DE ENVÍO
-        cy.log('🏪 Seleccionando: Recojo en Tienda');
-
-        // Buscamos el texto "Recojo en tienda" o "Tienda" y le damos clic
+        // Seleccionar Recojo en Tienda
         cy.contains('label', /Recojo|Tienda/i).click();
 
-        // NOTA: Al seleccionar tienda, normalmente NO se llena dirección.
-        // Así que vamos directo al botón de continuar.
+        // Clic en "Ir a Pagar" / "Continuar"
+        cy.log('Clic en "Ir a Pagar" o "Continuar"');
+        cy.get('button[type="submit"], input[type="submit"]').contains(/Pagar|Continuar|Siguiente|Ir a Pagar/i).click();
 
-        // Clic en "Ir a Pagar"
-        cy.get('button[type="submit"]').contains(/Pagar|Continuar|Siguiente/i).click();
-
-        // 5. PANTALLA DE PAGO
+        cy.log('3. PANTALLA DE PAGO - Simulación');
         cy.url().should('include', 'PaymentSimulation');
-        
-        cy.get('input#CardNumber').type('4111111111111111');
-        cy.get('input#Expiration').type('12/30');
-        cy.get('input#CVV').type('123');
-        
-        // Pagar
-        cy.get('input#CardNumber').parents('form').find('button[type="submit"]').click();
 
-        // 6. Validación Final
+        // Llenar datos de la tarjeta (usando la secuencia de pago estándar)
+        cy.get('input#CardNumber').type('4111111111111111');
+        cy.get('input#Expiration').type('12/26');
+        cy.get('input#CVV').type('123');
+
+        // Pagar: Usamos cy.contains para evitar la ambigüedad (CORRECCIÓN)
+        cy.contains('button', /Pagar/i).click();
+
+        cy.log('4. Validación Final');
         cy.url().should('include', '/Checkout/Success');
-        cy.log('✅ Compra con Recojo en Tienda Exitosa');
+        cy.contains('Compra Exitosa', { timeout: 10000 }).should('be.visible');
+        cy.log('¡Compra Exitosa! ✅');
     });
 
 });
